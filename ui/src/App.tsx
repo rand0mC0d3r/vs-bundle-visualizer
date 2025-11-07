@@ -574,7 +574,7 @@ function App() {
             )}
             {!hasChildren && <div className="tree-icon" />}
 
-            <div className="tree-icon folder">📁</div>
+            <div className={`tree-icon folder ${getFileExtension(folder.name || 'folder')}`}>📁</div>
 
             <div className="tree-label folder">
               {folder.name || 'root'}
