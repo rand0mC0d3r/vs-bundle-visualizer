@@ -1,6 +1,6 @@
 import { BundleData, VSCodeAPI, VSCodeMessage } from './types';
 
-// Mock data - you can replace this with data from mock.json
+// Mock bundle data for testing
 let mockBundleData: BundleData | null = null;
 
 // Load mock data from mock.json
