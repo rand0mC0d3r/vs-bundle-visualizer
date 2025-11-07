@@ -90,6 +90,23 @@ function App() {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   };
 
+  const getNodeSize = (node: any, bundleData: BundleData): number => {
+    // If node has a direct value, use it
+    if (node.value) return node.value;
+
+    // If node has a uid and we have nodeParts, look up the size
+    if (node.uid && bundleData.nodeParts && bundleData.nodeParts[node.uid]) {
+      return bundleData.nodeParts[node.uid].renderedLength;
+    }
+
+    // If it's a folder with children, calculate total
+    if (node.children && node.children.length > 0) {
+      return node.children.reduce((total: number, child: any) => total + getNodeSize(child, bundleData), 0);
+    }
+
+    return 0;
+  };
+
   const getFileExtension = (filename: string): string => {
     const ext = filename.split('.').pop()?.toLowerCase() || '';
     return ext;
@@ -148,7 +165,7 @@ function App() {
         // This is a file
         files.push({
           name: node.name,
-          size: node.value || 0,
+          size: getNodeSize(node, bundleData),
           fullPath: currentPath ? `${currentPath}/${node.name}` : node.name
         });
       }
@@ -328,6 +345,7 @@ function App() {
     const nodeId = `${path}/${node.name}`.replace(/^\//, '');
     const isExpanded = expandedNodes.has(nodeId);
     const isSelected = selectedNode === nodeId;
+    const nodeSize = getNodeSize(node, bundleData!);
 
     return (
       <div key={nodeId} className="tree-node" data-file-path={nodeId}>
@@ -359,9 +377,9 @@ function App() {
               {node.name}
             </div>
 
-            {node.value && (
+            {nodeSize > 0 && (
               <div className="tree-size">
-                {formatFileSize(node.value)}
+                {formatFileSize(nodeSize)}
               </div>
             )}
           </div>
@@ -379,11 +397,7 @@ function App() {
   };
 
   const calculateTotalSize = (node: any): number => {
-    if (node.value) return node.value;
-    if (node.children) {
-      return node.children.reduce((total: number, child: any) => total + calculateTotalSize(child), 0);
-    }
-    return 0;
+    return getNodeSize(node, bundleData!);
   };
 
   const countFiles = (node: any): { files: number; folders: number } => {

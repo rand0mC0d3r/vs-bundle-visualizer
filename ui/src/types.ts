@@ -3,11 +3,20 @@ export interface BundleData {
   tree?: {
     children?: TreeNode[];
   };
+  nodeParts?: {
+    [uid: string]: {
+      renderedLength: number;
+      gzipLength?: number;
+      brotliLength?: number;
+      metaUid?: string;
+    };
+  };
 }
 
 export interface TreeNode {
   name: string;
   id?: string;
+  uid?: string;
   value?: number;
   children?: TreeNode[];
 }
