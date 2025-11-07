@@ -255,6 +255,7 @@ function App() {
       return ids;
     };
 
+    // Expand main tree nodes
     if (bundleData?.tree?.children) {
       const allIds = new Set<string>();
       bundleData.tree.children.forEach((rootNode: any) => {
@@ -262,14 +263,63 @@ function App() {
       });
       setExpandedNodes(allIds);
     }
+
+    // Also expand all folders in side panel
+    const getAllFolderPaths = (folder: FolderNode): string[] => {
+      const paths = [folder.path];
+      folder.children.forEach(child => {
+        paths.push(...getAllFolderPaths(child));
+      });
+      return paths;
+    };
+
+    if (bundleData) {
+      const folderStructure = buildFolderStructure(bundleData);
+      const allFolderPaths = new Set(getAllFolderPaths(folderStructure));
+      setExpandedFolders(allFolderPaths);
+    }
   };
 
   const collapseAll = () => {
     setExpandedNodes(new Set());
+    setExpandedFolders(new Set());
   };
 
   const selectNode = (nodeId: string) => {
     setSelectedNode(nodeId);
+  };
+
+  const scrollToFileInMainContent = (filePath: string) => {
+    // Set the selected node first
+    setSelectedNode(filePath);
+
+    // Find and expand all parent nodes in the main tree to make the file visible
+    const expandParentNodes = (targetPath: string) => {
+      const parts = targetPath.split('/');
+      const newExpanded = new Set(expandedNodes);
+
+      // Build all parent paths and expand them
+      let currentPath = '';
+      for (let i = 0; i < parts.length - 1; i++) {
+        currentPath = currentPath ? `${currentPath}/${parts[i]}` : parts[i];
+        newExpanded.add(currentPath);
+      }
+
+      setExpandedNodes(newExpanded);
+    };
+
+    expandParentNodes(filePath);
+
+    // Scroll to the element after a short delay to allow rendering
+    setTimeout(() => {
+      const element = document.querySelector(`[data-file-path="${filePath}"]`);
+      if (element) {
+        element.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }, 100);
   };
 
   const renderTreeNode = (node: any, path: string = '', level: number = 0): JSX.Element => {
@@ -280,7 +330,7 @@ function App() {
     const isSelected = selectedNode === nodeId;
 
     return (
-      <div key={nodeId} className="tree-node">
+      <div key={nodeId} className="tree-node" data-file-path={nodeId}>
         <div
           className={`tree-item ${isSelected ? 'selected' : ''}`}
           style={{ paddingLeft: level * 16 + 4 }}
@@ -402,7 +452,7 @@ function App() {
                 key={file.fullPath}
                 className={`tree-item ${selectedNode === file.fullPath ? 'selected' : ''}`}
                 style={{ paddingLeft: (level + 1) * 16 + 4 }}
-                onClick={() => setSelectedNode(file.fullPath)}
+                onClick={() => scrollToFileInMainContent(file.fullPath)}
               >
                 <div className="tree-item-content">
                   <div className="tree-icon" />
