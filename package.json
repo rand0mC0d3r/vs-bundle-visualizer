@@ -30,6 +30,12 @@
   "icon": "icon.png",
   "license": "MIT",
   "main": "./dist/extension.js",
+  "files": [
+    "dist/",
+    "ui/dist/",
+    "README.md",
+    "LICENSE"
+  ],
   "auto-changelog": {
     "output": "CHANGELOG.md",
     "template": "keepachangelog",
@@ -38,36 +44,24 @@
     "hideCredit": true
   },
   "contributes": {
-    "viewsContainers": {
-      "activitybar": [
-        {
-          "id": "statsViewContainer",
-          "title": "Stats",
-          "icon": "media/chart.svg"
-        }
-      ]
-    },
-    "views": {
-      "statsViewContainer": [
-        {
-          "id": "statsViewer",
-          "name": "Stats Viewer"
-        }
-      ]
-    },
     "commands": [
       {
-        "command": "vs-bundle-visualizer.reIndex",
-        "title": "Bundle Visualizer: Reindex codebase"
+        "command": "bundleVisualizer.show",
+        "title": "Bundle Visualizer: Show Panel",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "bundleVisualizer.refresh",
+        "title": "Bundle Visualizer: Refresh Data"
       }
     ],
     "configuration": {
       "title": "Bundle Visualizer Configuration",
       "properties": {
-        "bundleVisualizer.sourceFile": {
+        "bundleVisualizer.statsPath": {
           "type": "string",
-          "default": "./dist/stats.json",
-          "description": "Source folder to scan for imports.",
+          "default": "dist/stats.json",
+          "description": "Path to the bundle stats JSON file relative to workspace root.",
           "scope": "resource"
         }
       }
@@ -79,7 +73,7 @@
     "watch": "npm-run-all -p watch:*",
     "watch:esbuild": "node esbuild.js --watch",
     "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
-    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "package": "npm run check-types && npm run lint && npm run build:ui && node esbuild.js --production",
     "compile-tests": "tsc -p . --outDir out",
     "watch-tests": "tsc -p . -w --outDir out",
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
@@ -88,7 +82,9 @@
     "changelog": "auto-changelog --stdout --template keepachangelog > CHANGELOG.md",
     "test": "vscode-test",
     "vsix": "npm run compile && vsce package",
-    "publish": "npm version patch && npm run changelog && npx vsce package && npx vsce publish && git add . && git commit -m \"chore: release new version\" && git push --follow-tags origin main"
+    "publish": "npm version patch && npm run changelog && npx vsce package && npx vsce publish && git add . && git commit -m \"chore: release new version\" && git push --follow-tags origin main",
+    "build:ui": "cd ui && npm install && npm run build",
+    "dev:ui": "cd ui && npm run dev"
   },
   "dependencies": {
     "minimatch": "^10.1.1",

@@ -1,0 +1,111 @@
+.app {
+  height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--vscode-editor-background);
+  color: var(--vscode-editor-foreground);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  background-color: var(--vscode-panel-background);
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vscode-panelTitle-activeForeground);
+}
+
+.refresh-button {
+  padding: 6px 12px;
+  background-color: var(--vscode-button-background);
+  color: var(--vscode-button-foreground);
+  border: none;
+  border-radius: 2px;
+  cursor: pointer;
+  font-size: 13px;
+  font-family: inherit;
+}
+
+.refresh-button:hover {
+  background-color: var(--vscode-button-hoverBackground);
+}
+
+.content {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+.error {
+  color: var(--vscode-errorForeground);
+  background-color: var(--vscode-inputValidation-errorBackground);
+  border: 1px solid var(--vscode-inputValidation-errorBorder);
+  padding: 12px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.loading {
+  color: var(--vscode-descriptionForeground);
+  font-style: italic;
+  text-align: center;
+  padding: 40px;
+}
+
+.data-container {
+  font-family: var(--vscode-editor-font-family);
+  font-size: var(--vscode-editor-font-size);
+  line-height: 1.4;
+}
+
+.data-item {
+  display: flex;
+  padding: 4px 0;
+  border-bottom: 1px solid var(--vscode-panel-border);
+}
+
+.data-key {
+  font-weight: 600;
+  color: var(--vscode-symbolIcon-keywordForeground);
+  min-width: 200px;
+  padding-right: 16px;
+}
+
+.data-value {
+  color: var(--vscode-editor-foreground);
+  flex: 1;
+  word-break: break-all;
+}
+
+.object-container {
+  margin: 8px 0;
+}
+
+.object-key {
+  font-weight: 600;
+  color: var(--vscode-symbolIcon-keywordForeground);
+  margin-bottom: 4px;
+}
+
+.object-value {
+  margin-left: 16px;
+  border-left: 2px solid var(--vscode-panel-border);
+  padding-left: 12px;
+}
+
+/* Theme specific adjustments */
+.theme-light {
+  --text-muted: #6a6a6a;
+}
+
+.theme-dark {
+  --text-muted: #969696;
+}
