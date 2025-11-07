@@ -135,6 +135,35 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
 
     calculateFolderSize(root);
 
+    // Collapse wrapper folders (folders with only one child folder and no files)
+    const collapseWrapperFolders = (folder: FolderNode): FolderNode => {
+      // First, recursively process children
+      const processedChildren = folder.children.map(child => collapseWrapperFolders(child));
+
+      // Check if this folder can be collapsed
+      const shouldCollapse = processedChildren.length === 1 &&
+                           folder.files.length === 0 &&
+                           folder.name !== 'root'; // Don't collapse the root folder
+
+      if (shouldCollapse) {
+        const onlyChild = processedChildren[0];
+        // Create a collapsed folder with combined path
+        const collapsedName = `${folder.name}/${onlyChild.name}`;
+        return {
+          ...onlyChild,
+          name: collapsedName,
+          path: onlyChild.path // Keep the original path for expansion logic
+        };
+      }
+
+      return {
+        ...folder,
+        children: processedChildren
+      };
+    };
+
+    const collapsedRoot = collapseWrapperFolders(root);
+
     // Remove empty folders if filter is enabled
     if (hideZeroByteFiles) {
       const removeEmptyFolders = (folder: FolderNode): FolderNode => {
@@ -149,13 +178,13 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
         };
       };
 
-      const cleanedRoot = removeEmptyFolders(root);
+      const cleanedRoot = removeEmptyFolders(collapsedRoot);
       // Recalculate sizes after cleaning
       calculateFolderSize(cleanedRoot);
       return cleanedRoot;
     }
 
-    return root;
+    return collapsedRoot;
   };
 
   const renderFolderTree = (folder: FolderNode, level: number = 0): JSX.Element => {
