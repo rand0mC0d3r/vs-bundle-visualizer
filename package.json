@@ -1,0 +1,94 @@
+{
+  "name": "vs-bundle-visualizer",
+  "publisher": "bd-code",
+  "displayName": "Bundle visualizer for Rollup/Webpack json stats",
+  "description": "Visualize bundle statistics for Rollup and Webpack.",
+  "keywords": [
+    "TypeScript",
+    "Bundle",
+    "Visualizer",
+    "Webpack",
+    "Rollup",
+    "Vite",
+    "JavaScript"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rand0mC0d3r/vs-bundle-visualizer"
+  },
+  "version": "0.0.20",
+  "engines": {
+    "vscode": "^1.105.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished",
+    "workspaceContains:**/*.{ts,tsx,js,jsx}"
+  ],
+  "icon": "icon.png",
+  "license": "MIT",
+  "main": "./dist/extension.js",
+  "auto-changelog": {
+    "output": "CHANGELOG.md",
+    "template": "keepachangelog",
+    "unreleased": true,
+    "commitLimit": false,
+    "hideCredit": true
+  },
+  "contributes": {
+    "commands": [
+      {
+        "command": "vs-bundle-visualizer.reIndex",
+        "title": "Bundle Visualizer: Reindex codebase"
+      }
+    ],
+    "configuration": {
+      "title": "Bundle Visualizer Configuration",
+      "properties": {
+        "bundleVisualizer.sourceFile": {
+          "type": "string",
+          "default": "./dist/stats.json",
+          "description": "Source folder to scan for imports.",
+          "scope": "resource"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run package",
+    "compile": "npm run check-types && npm run lint && node esbuild.js",
+    "watch": "npm-run-all -p watch:*",
+    "watch:esbuild": "node esbuild.js --watch",
+    "watch:tsc": "tsc --noEmit --watch --project tsconfig.json",
+    "package": "npm run check-types && npm run lint && node esbuild.js --production",
+    "compile-tests": "tsc -p . --outDir out",
+    "watch-tests": "tsc -p . -w --outDir out",
+    "pretest": "npm run compile-tests && npm run compile && npm run lint",
+    "check-types": "tsc --noEmit",
+    "lint": "eslint src",
+    "changelog": "auto-changelog --stdout --template keepachangelog > CHANGELOG.md",
+    "test": "vscode-test",
+    "vsix": "npm run compile && vsce package",
+    "publish": "npm version patch && npm run changelog && npx vsce package && npx vsce publish && git add . && git commit -m \"chore: release new version\" && git push --follow-tags origin main"
+  },
+  "dependencies": {
+    "minimatch": "^10.1.1",
+    "ts-morph": "^27.0.2"
+  },
+  "devDependencies": {
+    "@types/mocha": "^10.0.10",
+    "@types/node": "22.x",
+    "@types/vscode": "^1.105.0",
+    "@typescript-eslint/eslint-plugin": "^8.45.0",
+    "@typescript-eslint/parser": "^8.45.0",
+    "@vscode/test-cli": "^0.0.11",
+    "@vscode/test-electron": "^2.5.2",
+    "auto-changelog": "^2.5.0",
+    "esbuild": "^0.25.10",
+    "eslint": "^9.36.0",
+    "npm-run-all": "^4.1.5",
+    "typescript": "^5.9.3"
+  }
+}
