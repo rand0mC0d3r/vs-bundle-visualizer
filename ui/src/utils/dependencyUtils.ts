@@ -103,12 +103,12 @@ export const checkNodeMatchesLibraryFilters = (
     }
 
     // For asset bundles, check if any of their dependencies match the filters
-    // if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
-    //   return bundleInfo.dependencies.some(dep => {
-    //     const depInfo = dependencyMap[dep];
-    //     return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
-    //   });
-    // }
+    if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
+      return bundleInfo.dependencies.some(dep => {
+        const depInfo = dependencyMap[dep];
+        return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
+      });
+    }
 
     // If it's a bundle but doesn't match any filter, hide it
     return false;
@@ -122,7 +122,7 @@ export const checkNodeMatchesLibraryFilters = (
   }
 
   // For leaf nodes that aren't bundles, show them (they're internal files within matching bundles)
-  return true;
+  return false;
 };
 
 export const checkFileMatchesLibraryFilters = (
@@ -196,5 +196,5 @@ export const checkFolderMatchesLibraryFilters = (
   }
 
   // For non-bundle folders, show them (they might contain matching files)
-  return true;
+  return false;
 };
