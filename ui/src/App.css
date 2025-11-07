@@ -392,7 +392,7 @@
   color: var(--vscode-badge-foreground, #ffffff);
   padding: 2px 6px;
   border-radius: 3px;
-  font-size: 0.8em;
+  font-size: 1em;
   font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace);
 }
 
