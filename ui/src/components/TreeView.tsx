@@ -252,7 +252,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
               {node.name} {" "}
               {bundleInfo?.mainLibrary && (
                 <span
-                  className="dependency-item dependency-item-vendor clickable"
+                  className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (libraryFilters.includes(bundleInfo.mainLibrary!)) {
@@ -301,17 +301,22 @@ export const TreeView: React.FC<TreeViewProps> = ({
                       {bundleInfo.dependencies.map(dep => {
                         const depInfo = dependencyMap[dep];
                         const libraryName = depInfo?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '');
+                        const isActive = depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
                         return (
                           <span
                             key={dep}
-                            className="dependency-item dependency-item-vendor clickable"
+                            className={`dependency-item dependency-item-vendor clickable ${isActive ? 'active' : ''}`}
                             onClick={(e) => {
                               e.stopPropagation();
                               if (depInfo?.mainLibrary) {
-                                onAddLibraryFilter(depInfo.mainLibrary);
+                                if (isActive) {
+                                  onRemoveLibraryFilter(depInfo.mainLibrary);
+                                } else {
+                                  onAddLibraryFilter(depInfo.mainLibrary);
+                                }
                               }
                             }}
-                            title={`Filter by ${libraryName}`}
+                            title={`${isActive ? 'Remove' : 'Add'} filter: ${libraryName}`}
                           >
                             {libraryName}
                           </span>

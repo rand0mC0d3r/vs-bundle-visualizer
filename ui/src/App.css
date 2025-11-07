@@ -429,6 +429,25 @@
   opacity: 0.8;
 }
 
+.dependency-item.clickable.active {
+  background: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #ffffff);
+  border: 2px solid var(--vscode-focusBorder, #007acc);
+  box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007acc);
+}
+
+.dependency-item.clickable.active:hover {
+  background: var(--vscode-button-hoverBackground, #1177bb);
+  opacity: 1;
+}
+
+.main-library.clickable.active {
+  background: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #ffffff);
+  border: 2px solid var(--vscode-focusBorder, #007acc);
+  box-shadow: 0 0 0 1px var(--vscode-focusBorder, #007acc);
+}
+
 /* Library Filters */
 .library-filters-header {
   background: var(--vscode-inputValidation-infoBackground, #063B49);
