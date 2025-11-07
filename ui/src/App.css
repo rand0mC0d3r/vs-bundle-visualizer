@@ -14,6 +14,7 @@
   padding: 16px 20px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-panel-background);
+  gap: 12px;
 }
 
 .header h1 {
@@ -21,6 +22,17 @@
   font-size: 18px;
   font-weight: 600;
   color: var(--vscode-panelTitle-activeForeground);
+  flex: 1;
+}
+
+.dev-indicator {
+  padding: 4px 8px;
+  background-color: #ff6b35;
+  color: white;
+  font-size: 10px;
+  font-weight: bold;
+  border-radius: 2px;
+  letter-spacing: 0.5px;
 }
 
 .refresh-button {

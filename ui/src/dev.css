@@ -1,0 +1,71 @@
+/* Development mode CSS variables for VS Code theming */
+/* This file provides VS Code CSS custom properties when running in development mode */
+
+:root {
+  /* Dark theme colors (default) */
+  --vscode-editor-background: #1e1e1e;
+  --vscode-editor-foreground: #d4d4d4;
+  --vscode-panel-background: #252526;
+  --vscode-panel-border: #2d2d30;
+  --vscode-panelTitle-activeForeground: #e7e7e7;
+  --vscode-button-background: #0e639c;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #1177bb;
+  --vscode-errorForeground: #f48771;
+  --vscode-inputValidation-errorBackground: #5a1d1d;
+  --vscode-inputValidation-errorBorder: #be1100;
+  --vscode-descriptionForeground: #cccccc99;
+  --vscode-symbolIcon-keywordForeground: #569cd6;
+  --vscode-editor-font-family: 'Consolas', 'Courier New', monospace;
+  --vscode-editor-font-size: 14px;
+}
+
+/* Light theme override */
+body.theme-light {
+  --vscode-editor-background: #ffffff;
+  --vscode-editor-foreground: #000000;
+  --vscode-panel-background: #f3f3f3;
+  --vscode-panel-border: #e5e5e5;
+  --vscode-panelTitle-activeForeground: #333333;
+  --vscode-button-background: #007acc;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #005a9e;
+  --vscode-errorForeground: #cd3131;
+  --vscode-inputValidation-errorBackground: #f2dede;
+  --vscode-inputValidation-errorBorder: #be1100;
+  --vscode-descriptionForeground: #6c6c6c;
+  --vscode-symbolIcon-keywordForeground: #0000ff;
+}
+
+/* Development mode specific styles */
+.dev-mode-notice {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  padding: 8px 12px;
+  background: linear-gradient(45deg, #ff6b35, #f7931e);
+  color: white;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Override browser scrollbar to match VS Code */
+::-webkit-scrollbar {
+  width: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vscode-editor-background);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vscode-panel-border);
+  border-radius: 0;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #464647;
+}

@@ -4,9 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000 --open",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "dev:mock": "echo 'Starting development server with mock data...' && npm run dev"
   },
   "dependencies": {
     "react": "^18.2.0",

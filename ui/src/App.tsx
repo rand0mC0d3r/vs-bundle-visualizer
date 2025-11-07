@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import './App.css';
+import { createMockVSCodeApi, isDevelopmentMode } from './mockApi';
 import { BundleData, VSCodeAPI, VSCodeMessage, VSCodeTheme } from './types';
 
 declare global {
@@ -12,7 +13,14 @@ function App() {
   const [bundleData, setBundleData] = useState<BundleData | null>(null);
   const [theme, setTheme] = useState<VSCodeTheme>({ kind: 2 });
   const [error, setError] = useState<string | null>(null);
-  const [vscodeApi] = useState(() => window.acquireVsCodeApi());
+  const [vscodeApi] = useState(() => {
+    // Use mock API in development mode, real API in VS Code
+    if (isDevelopmentMode()) {
+      console.log('Running in development mode - using mock VS Code API');
+      return createMockVSCodeApi();
+    }
+    return window.acquireVsCodeApi();
+  });
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -79,6 +87,11 @@ function App() {
     <div className={`app theme-${theme.kind === 1 ? 'light' : 'dark'}`}>
       <div className="header">
         <h1>Bundle Visualizer</h1>
+        {isDevelopmentMode() && (
+          <div className="dev-indicator">
+            DEV MODE
+          </div>
+        )}
         <button
           className="refresh-button"
           onClick={() => vscodeApi.postMessage({ command: 'refresh' })}

@@ -7,6 +7,23 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+
+  /* Development mode: VS Code theme colors */
+  --vscode-editor-background: #1e1e1e;
+  --vscode-editor-foreground: #d4d4d4;
+  --vscode-panel-background: #252526;
+  --vscode-panel-border: #2d2d30;
+  --vscode-panelTitle-activeForeground: #e7e7e7;
+  --vscode-button-background: #0e639c;
+  --vscode-button-foreground: #ffffff;
+  --vscode-button-hoverBackground: #1177bb;
+  --vscode-errorForeground: #f48771;
+  --vscode-inputValidation-errorBackground: #5a1d1d;
+  --vscode-inputValidation-errorBorder: #be1100;
+  --vscode-descriptionForeground: #cccccc99;
+  --vscode-symbolIcon-keywordForeground: #569cd6;
+  --vscode-editor-font-family: 'Consolas', 'Courier New', monospace;
+  --vscode-editor-font-size: 14px;
 }
 
 * {
