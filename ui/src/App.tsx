@@ -212,6 +212,7 @@ function App() {
                 bundleData={bundleData}
                 expandedFolders={expandedFolders}
                 selectedFolder={selectedFolder}
+                selectedNode={selectedNode}
                 hideZeroByteFiles={hideZeroByteFiles}
                 hiddenRootFolders={hiddenRootFolders}
                 onToggleFolder={toggleFolder}

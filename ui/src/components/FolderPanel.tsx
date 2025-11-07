@@ -7,6 +7,7 @@ interface FolderPanelProps {
   bundleData: BundleData;
   expandedFolders: Set<string>;
   selectedFolder: string | null;
+  selectedNode: string | null;
   hideZeroByteFiles: boolean;
   hiddenRootFolders: Set<string>;
   onToggleFolder: (folderPath: string) => void;
@@ -18,6 +19,7 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
   bundleData,
   expandedFolders,
   selectedFolder,
+  selectedNode,
   hideZeroByteFiles,
   hiddenRootFolders,
   onToggleFolder,
@@ -219,7 +221,24 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
             </div>
 
             <div className="tree-label folder">
-              {folder.name || 'Root'}
+              {(() => {
+                const displayName = folder.name || 'Root';
+                if (displayName.includes('/')) {
+                  // Split the collapsed path to show the last part normally and the rest dimmed
+                  const pathParts = displayName.split('/');
+                  const lastPart = pathParts.pop();
+                  const collapsedPath = pathParts.join('/');
+
+                  return (
+                    <>
+                      <span>{collapsedPath}</span>
+                      <span className="path-separator"> / </span>
+                      <span className="collapsed-path">{lastPart}</span>
+                    </>
+                  );
+                }
+                return displayName;
+              })()}
             </div>
 
             <div className="tree-size">
@@ -234,7 +253,7 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
             {folder.files.map(file => (
               <div
                 key={file.fullPath}
-                className={`tree-item ${selectedFolder === file.fullPath ? 'selected' : ''}`}
+                className={`tree-item ${selectedFolder === file.fullPath || selectedNode === file.fullPath ? 'selected' : ''}`}
                 style={{ paddingLeft: (level + 1) * 16 + 4 }}
                 onClick={() => onScrollToFile(file.fullPath)}
               >
