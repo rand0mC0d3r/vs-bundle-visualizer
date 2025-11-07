@@ -15,6 +15,9 @@ function App() {
   const [error, setError] = useState<string | null>(null);
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
   const [selectedNode, setSelectedNode] = useState<string | null>(null);
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [showSidePanel, setShowSidePanel] = useState<boolean>(true);
   const [vscodeApi] = useState(() => {
     // Use mock API in development mode, real API in VS Code
     if (isDevelopmentMode()) {
@@ -58,6 +61,10 @@ function App() {
           case 'r':
             event.preventDefault();
             vscodeApi.postMessage({ command: 'refresh' });
+            break;
+          case 'b':
+            event.preventDefault();
+            setShowSidePanel(!showSidePanel);
             break;
         }
       }
@@ -111,6 +118,117 @@ function App() {
     };
 
     return iconMap[ext] || '📄';
+  };
+
+  // Build folder structure from flat file list
+  interface FolderNode {
+    name: string;
+    path: string;
+    children: FolderNode[];
+    files: Array<{ name: string; size: number; fullPath: string }>;
+    totalSize: number;
+  }
+
+  const buildFolderStructure = (bundleData: BundleData): FolderNode => {
+    const root: FolderNode = {
+      name: 'root',
+      path: '',
+      children: [],
+      files: [],
+      totalSize: 0
+    };
+
+    const folderMap = new Map<string, FolderNode>();
+    folderMap.set('', root);
+
+    const getAllFiles = (node: any, currentPath: string = ''): Array<{ name: string; size: number; fullPath: string }> => {
+      const files: Array<{ name: string; size: number; fullPath: string }> = [];
+
+      if (node.name && !node.children) {
+        // This is a file
+        files.push({
+          name: node.name,
+          size: node.value || 0,
+          fullPath: currentPath ? `${currentPath}/${node.name}` : node.name
+        });
+      }
+
+      if (node.children) {
+        node.children.forEach((child: any) => {
+          files.push(...getAllFiles(child, currentPath ? `${currentPath}/${node.name}` : node.name));
+        });
+      }
+
+      return files;
+    };
+
+    // Extract all files from bundle data
+    const allFiles: Array<{ name: string; size: number; fullPath: string }> = [];
+    if (bundleData?.tree?.children) {
+      bundleData.tree.children.forEach(rootNode => {
+        allFiles.push(...getAllFiles(rootNode));
+      });
+    }
+
+    // Build folder structure
+    allFiles.forEach(file => {
+      const pathParts = file.fullPath.split('/');
+      const fileName = pathParts.pop() || '';
+      let currentPath = '';
+      let currentFolder = root;
+
+      // Create folder hierarchy
+      pathParts.forEach(folderName => {
+        const newPath = currentPath ? `${currentPath}/${folderName}` : folderName;
+
+        if (!folderMap.has(newPath)) {
+          const newFolder: FolderNode = {
+            name: folderName,
+            path: newPath,
+            children: [],
+            files: [],
+            totalSize: 0
+          };
+          folderMap.set(newPath, newFolder);
+          currentFolder.children.push(newFolder);
+        }
+
+        currentFolder = folderMap.get(newPath)!;
+        currentPath = newPath;
+      });
+
+      // Add file to its folder
+      currentFolder.files.push({
+        name: fileName,
+        size: file.size,
+        fullPath: file.fullPath
+      });
+    });
+
+    // Calculate total sizes
+    const calculateFolderSize = (folder: FolderNode): number => {
+      const fileSize = folder.files.reduce((sum, file) => sum + file.size, 0);
+      const childrenSize = folder.children.reduce((sum, child) => sum + calculateFolderSize(child), 0);
+      folder.totalSize = fileSize + childrenSize;
+      return folder.totalSize;
+    };
+
+    calculateFolderSize(root);
+    return root;
+  };
+
+  const toggleFolder = (folderPath: string) => {
+    const newExpanded = new Set(expandedFolders);
+    if (newExpanded.has(folderPath)) {
+      newExpanded.delete(folderPath);
+    } else {
+      newExpanded.add(folderPath);
+    }
+    setExpandedFolders(newExpanded);
+  };
+
+  const selectFolder = (folderPath: string) => {
+    setSelectedFolder(folderPath);
   };
 
   const toggleNode = (nodeId: string) => {
@@ -235,6 +353,77 @@ function App() {
     );
   };
 
+  const renderFolderTree = (folder: FolderNode, level: number = 0): JSX.Element => {
+    const isExpanded = expandedFolders.has(folder.path);
+    const isSelected = selectedFolder === folder.path;
+    const hasChildren = folder.children.length > 0 || folder.files.length > 0;
+
+    return (
+      <div key={folder.path} className="folder-node">
+        <div
+          className={`tree-item ${isSelected ? 'selected' : ''}`}
+          style={{ paddingLeft: level * 16 + 4 }}
+          onClick={() => selectFolder(folder.path)}
+        >
+          <div className="tree-item-content">
+            {hasChildren && (
+              <div
+                className={`tree-icon expandable`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleFolder(folder.path);
+                }}
+                title={isExpanded ? 'Collapse' : 'Expand'}
+              >
+                {isExpanded ? '▼' : '▶'}
+              </div>
+            )}
+            {!hasChildren && <div className="tree-icon" />}
+
+            <div className="tree-icon folder">📁</div>
+
+            <div className="tree-label folder">
+              {folder.name || 'root'}
+            </div>
+
+            <div className="tree-size">
+              {formatFileSize(folder.totalSize)}
+            </div>
+          </div>
+        </div>
+
+        {isExpanded && (
+          <div className="tree-children">
+            {folder.children.map(child =>
+              renderFolderTree(child, level + 1)
+            )}
+            {folder.files.map(file => (
+              <div
+                key={file.fullPath}
+                className={`tree-item ${selectedNode === file.fullPath ? 'selected' : ''}`}
+                style={{ paddingLeft: (level + 1) * 16 + 4 }}
+                onClick={() => setSelectedNode(file.fullPath)}
+              >
+                <div className="tree-item-content">
+                  <div className="tree-icon" />
+                  <div className={`tree-icon file ${getFileExtension(file.name)}`}>
+                    {getFileIcon(file.name, false)}
+                  </div>
+                  <div className="tree-label">
+                    {file.name}
+                  </div>
+                  <div className="tree-size">
+                    {formatFileSize(file.size)}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div className={`app theme-${theme.kind === 1 ? 'light' : 'dark'}`}>
       <div className="header">
@@ -245,6 +434,13 @@ function App() {
           </div>
         )}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            className="refresh-button"
+            onClick={() => setShowSidePanel(!showSidePanel)}
+            title="Toggle folder panel"
+          >
+            {showSidePanel ? 'Hide Folders' : 'Show Folders'}
+          </button>
           <button
             className="refresh-button"
             onClick={expandAll}
@@ -274,33 +470,48 @@ function App() {
             <strong>Error:</strong> {error}
           </div>
         ) : bundleData?.tree?.children ? (
-          <div className="tree-container">
-            {bundleData.tree.children.map((rootNode: any) => {
-              const totalSize = calculateTotalSize(rootNode);
-              const counts = countFiles(rootNode);
+          <div className="main-layout">
+            {showSidePanel && (
+              <div className="side-panel">
+                <div className="side-panel-header">
+                  <h3>Folder Structure</h3>
+                </div>
+                <div className="side-panel-content">
+                  {(() => {
+                    const folderStructure = buildFolderStructure(bundleData);
+                    return renderFolderTree(folderStructure);
+                  })()}
+                </div>
+              </div>
+            )}
+            <div className={`tree-container ${showSidePanel ? 'with-sidebar' : ''}`}>
+              {bundleData.tree.children.map((rootNode: any) => {
+                const totalSize = calculateTotalSize(rootNode);
+                const counts = countFiles(rootNode);
 
-              return (
-                <div key={rootNode.name || rootNode.id} className="tree-root">
-                  <div className="tree-root-header">
-                    <span>{rootNode.name || 'Bundle Root'}</span>
-                    <div className="file-stats">
-                      <span>{counts.files} files</span>
-                      <span>{counts.folders} folders</span>
-                      <span>{formatFileSize(totalSize)}</span>
+                return (
+                  <div key={rootNode.name || rootNode.id} className="tree-root">
+                    <div className="tree-root-header">
+                      <span>{rootNode.name || 'Bundle Root'}</span>
+                      <div className="file-stats">
+                        <span>{counts.files} files</span>
+                        <span>{counts.folders} folders</span>
+                        <span>{formatFileSize(totalSize)}</span>
+                      </div>
+                    </div>
+                    <div className="tree-root-content">
+                      {rootNode.children ? (
+                        rootNode.children.map((child: any) =>
+                          renderTreeNode(child, rootNode.name || 'root', 0)
+                        )
+                      ) : (
+                        renderTreeNode(rootNode, '', 0)
+                      )}
                     </div>
                   </div>
-                  <div className="tree-root-content">
-                    {rootNode.children ? (
-                      rootNode.children.map((child: any) =>
-                        renderTreeNode(child, rootNode.name || 'root', 0)
-                      )
-                    ) : (
-                      renderTreeNode(rootNode, '', 0)
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         ) : bundleData ? (
           <div className="loading">Bundle data loaded but no tree structure found</div>
@@ -323,6 +534,7 @@ function App() {
           )}
         </div>
         <div className="status-shortcuts">
+          <span><span className="kbd">Ctrl+B</span> Toggle Panel</span>
           <span><span className="kbd">Ctrl+E</span> Expand All</span>
           <span><span className="kbd">Ctrl+W</span> Collapse All</span>
           <span><span className="kbd">Ctrl+R</span> Refresh</span>
