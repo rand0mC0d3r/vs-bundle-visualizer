@@ -7,6 +7,41 @@
   color: var(--vscode-editor-foreground);
 }
 
+/* VS Code-style scrollbars */
+::-webkit-scrollbar {
+  width: 14px;
+  height: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--vscode-editor-background, #1e1e1e);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--vscode-scrollbarSlider-background, rgba(121, 121, 121, 0.4));
+  border-radius: 0;
+  border: 3px solid var(--vscode-editor-background, #1e1e1e);
+  min-height: 20px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--vscode-scrollbarSlider-hoverBackground, rgba(121, 121, 121, 0.7));
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: var(--vscode-scrollbarSlider-activeBackground, rgba(121, 121, 121, 0.8));
+}
+
+::-webkit-scrollbar-corner {
+  background: var(--vscode-editor-background, #1e1e1e);
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--vscode-scrollbarSlider-background, rgba(121, 121, 121, 0.4)) var(--vscode-editor-background, #1e1e1e);
+}
+
 .header {
   display: flex;
   justify-content: space-between;

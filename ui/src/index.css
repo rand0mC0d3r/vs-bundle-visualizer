@@ -24,6 +24,18 @@
   --vscode-symbolIcon-keywordForeground: #569cd6;
   --vscode-editor-font-family: 'Consolas', 'Courier New', monospace;
   --vscode-editor-font-size: 14px;
+
+  /* Scrollbar colors */
+  --vscode-scrollbarSlider-background: rgba(121, 121, 121, 0.4);
+  --vscode-scrollbarSlider-hoverBackground: rgba(121, 121, 121, 0.7);
+  --vscode-scrollbarSlider-activeBackground: rgba(121, 121, 121, 0.8);
+}
+
+/* Light theme scrollbar colors */
+.theme-light {
+  --vscode-scrollbarSlider-background: rgba(0, 0, 0, 0.2);
+  --vscode-scrollbarSlider-hoverBackground: rgba(0, 0, 0, 0.4);
+  --vscode-scrollbarSlider-activeBackground: rgba(0, 0, 0, 0.5);
 }
 
 * {
