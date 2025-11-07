@@ -38,6 +38,23 @@
     "hideCredit": true
   },
   "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "statsViewContainer",
+          "title": "Stats",
+          "icon": "media/chart.svg"
+        }
+      ]
+    },
+    "views": {
+      "statsViewContainer": [
+        {
+          "id": "statsViewer",
+          "name": "Stats Viewer"
+        }
+      ]
+    },
     "commands": [
       {
         "command": "vs-bundle-visualizer.reIndex",
