@@ -18,6 +18,9 @@ function App() {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showSidePanel, setShowSidePanel] = useState<boolean>(true);
+  const [sortCriteria, setSortCriteria] = useState<'filename' | 'fileCount' | 'fileSize'>('filename');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
+  const [hiddenRootFolders, setHiddenRootFolders] = useState<Set<string>>(new Set());
   const [vscodeApi] = useState(() => {
     // Use mock API in development mode, real API in VS Code
     if (isDevelopmentMode()) {
@@ -65,6 +68,30 @@ function App() {
           case 'b':
             event.preventDefault();
             setShowSidePanel(!showSidePanel);
+            break;
+          case 's':
+            event.preventDefault();
+            toggleSortDirection();
+            break;
+          case '1':
+            event.preventDefault();
+            changeSortCriteria('filename');
+            break;
+          case '2':
+            event.preventDefault();
+            changeSortCriteria('fileCount');
+            break;
+          case '3':
+            event.preventDefault();
+            changeSortCriteria('fileSize');
+            break;
+          case 'f':
+            event.preventDefault();
+            // Toggle first root folder visibility
+            const rootFolders = getRootFolders();
+            if (rootFolders.length > 0) {
+              toggleRootFolderVisibility(rootFolders[0]);
+            }
             break;
         }
       }
@@ -187,8 +214,15 @@ function App() {
       });
     }
 
+    // Filter files based on visible root folders
+    const filteredFiles = allFiles.filter(file => {
+      const firstSlash = file.fullPath.indexOf('/');
+      const topLevelFolder = firstSlash > 0 ? file.fullPath.substring(0, firstSlash) : '(root)';
+      return isRootFolderVisible(topLevelFolder);
+    });
+
     // Build folder structure
-    allFiles.forEach(file => {
+    filteredFiles.forEach(file => {
       const pathParts = file.fullPath.split('/');
       const fileName = pathParts.pop() || '';
       let currentPath = '';
@@ -306,6 +340,102 @@ function App() {
     setSelectedNode(nodeId);
   };
 
+  const toggleSortDirection = () => {
+    setSortDirection(prev => prev === 'asc' ? 'desc' : 'asc');
+  };
+
+  const changeSortCriteria = (criteria: 'filename' | 'fileCount' | 'fileSize') => {
+    setSortCriteria(criteria);
+  };
+
+  const toggleRootFolderVisibility = (rootFolderName: string) => {
+    const newHidden = new Set(hiddenRootFolders);
+    if (newHidden.has(rootFolderName)) {
+      newHidden.delete(rootFolderName);
+    } else {
+      newHidden.add(rootFolderName);
+    }
+    setHiddenRootFolders(newHidden);
+  };
+
+  const getRootFolders = (): string[] => {
+    if (!bundleData?.tree?.children) return [];
+
+    const rootFolderNames = new Set<string>();
+
+    // Extract all files and get their top-level folder names
+    const extractRootFolders = (node: any, currentPath: string = '') => {
+      if (node.name && !node.children) {
+        // This is a file - extract the top-level folder from the full path
+        const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
+        const firstSlash = fullPath.indexOf('/');
+        if (firstSlash > 0) {
+          const topLevelFolder = fullPath.substring(0, firstSlash);
+          rootFolderNames.add(topLevelFolder);
+        } else {
+          // File is at root level
+          rootFolderNames.add('(root)');
+        }
+      }
+
+      if (node.children) {
+        node.children.forEach((child: any) => {
+          extractRootFolders(child, currentPath ? `${currentPath}/${node.name}` : node.name);
+        });
+      }
+    };
+
+    bundleData.tree.children.forEach(rootNode => {
+      extractRootFolders(rootNode);
+    });
+
+    return Array.from(rootFolderNames).sort();
+  };
+
+  const isRootFolderVisible = (rootFolderName: string): boolean => {
+    return !hiddenRootFolders.has(rootFolderName);
+  };
+
+  const sortNodes = (nodes: any[]): any[] => {
+    return [...nodes].sort((a, b) => {
+      let aValue: any, bValue: any;
+
+      switch (sortCriteria) {
+        case 'filename':
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+          break;
+        case 'fileCount':
+          aValue = countFiles(a).files + countFiles(a).folders;
+          bValue = countFiles(b).files + countFiles(b).folders;
+          break;
+        case 'fileSize':
+          aValue = getNodeSize(a, bundleData!);
+          bValue = getNodeSize(b, bundleData!);
+          break;
+        default:
+          aValue = a.name.toLowerCase();
+          bValue = b.name.toLowerCase();
+      }
+
+      if (sortCriteria === 'filename') {
+        // String comparison
+        if (sortDirection === 'asc') {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      } else {
+        // Numeric comparison
+        if (sortDirection === 'asc') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      }
+    });
+  };
+
   const scrollToFileInMainContent = (filePath: string) => {
     // Set the selected node first
     setSelectedNode(filePath);
@@ -387,7 +517,7 @@ function App() {
 
         {hasChildren && isExpanded && (
           <div className="tree-children">
-            {node.children.map((child: any) =>
+            {sortNodes(node.children).map((child: any) =>
               renderTreeNode(child, nodeId, level + 1)
             )}
           </div>
@@ -498,6 +628,56 @@ function App() {
           </div>
         )}
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center', borderRight: '1px solid var(--vscode-panel-border)', paddingRight: '8px' }}>
+            <span style={{ fontSize: '12px', opacity: 0.8 }}>Sort:</span>
+            <select
+              value={sortCriteria}
+              onChange={(e) => changeSortCriteria(e.target.value as 'filename' | 'fileCount' | 'fileSize')}
+              style={{
+                background: 'var(--vscode-dropdown-background)',
+                color: 'var(--vscode-dropdown-foreground)',
+                border: '1px solid var(--vscode-dropdown-border)',
+                borderRadius: '2px',
+                padding: '2px 4px',
+                fontSize: '12px'
+              }}
+            >
+              <option value="filename">Name</option>
+              <option value="fileCount">Count</option>
+              <option value="fileSize">Size</option>
+            </select>
+            <button
+              className="refresh-button"
+              onClick={toggleSortDirection}
+              title={`Sort ${sortDirection === 'asc' ? 'descending' : 'ascending'}`}
+              style={{ padding: '2px 6px', fontSize: '12px' }}
+            >
+              {sortDirection === 'asc' ? '↑' : '↓'}
+            </button>
+          </div>
+
+          {getRootFolders().length > 1 && (
+            <div style={{ display: 'flex', gap: '4px', alignItems: 'center', borderRight: '1px solid var(--vscode-panel-border)', paddingRight: '8px' }}>
+              <span style={{ fontSize: '12px', opacity: 0.8 }}>Filter:</span>
+              {getRootFolders().map(rootFolder => (
+                <button
+                  key={rootFolder}
+                  className={`refresh-button ${isRootFolderVisible(rootFolder) ? '' : 'inactive'}`}
+                  onClick={() => toggleRootFolderVisibility(rootFolder)}
+                  title={`${isRootFolderVisible(rootFolder) ? 'Hide' : 'Show'} ${rootFolder}`}
+                  style={{
+                    padding: '2px 6px',
+                    fontSize: '11px',
+                    opacity: isRootFolderVisible(rootFolder) ? 1 : 0.5,
+                    textDecoration: isRootFolderVisible(rootFolder) ? 'none' : 'line-through'
+                  }}
+                >
+                  {rootFolder.length > 15 ? `${rootFolder.substring(0, 12)}...` : rootFolder}
+                </button>
+              ))}
+            </div>
+          )}
+
           <button
             className="refresh-button"
             onClick={() => setShowSidePanel(!showSidePanel)}
@@ -549,7 +729,28 @@ function App() {
               </div>
             )}
             <div className={`tree-container ${showSidePanel ? 'with-sidebar' : ''}`}>
-              {bundleData.tree.children.map((rootNode: any) => {
+              {sortNodes(bundleData.tree.children.filter(rootNode => {
+                // Check if any file in this root node belongs to a visible folder
+                const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
+                  if (node.name && !node.children) {
+                    // This is a file - check if its top-level folder is visible
+                    const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
+                    const firstSlash = fullPath.indexOf('/');
+                    const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
+                    return isRootFolderVisible(topLevelFolder);
+                  }
+
+                  if (node.children) {
+                    return node.children.some((child: any) =>
+                      hasVisibleFiles(child, currentPath ? `${currentPath}/${node.name}` : node.name)
+                    );
+                  }
+
+                  return false;
+                };
+
+                return hasVisibleFiles(rootNode);
+              })).map((rootNode: any) => {
                 const totalSize = calculateTotalSize(rootNode);
                 const counts = countFiles(rootNode);
 
@@ -565,7 +766,7 @@ function App() {
                     </div>
                     <div className="tree-root-content">
                       {rootNode.children ? (
-                        rootNode.children.map((child: any) =>
+                        sortNodes(rootNode.children).map((child: any) =>
                           renderTreeNode(child, rootNode.name || 'root', 0)
                         )
                       ) : (
@@ -588,17 +789,47 @@ function App() {
       <div className="status-bar">
         <div className="status-info">
           {selectedNode && <span>Selected: {selectedNode}</span>}
+          <span>Sort: {sortCriteria} ({sortDirection})</span>
+          {hiddenRootFolders.size > 0 && (
+            <span>Filtered: {hiddenRootFolders.size} hidden</span>
+          )}
           {bundleData?.tree?.children && (
             <span>
-              {bundleData.tree.children.reduce((total, node) => {
-                const counts = countFiles(node);
-                return total + counts.files + counts.folders;
-              }, 0)} items
+              {bundleData.tree.children
+                .filter(rootNode => {
+                  // Check if any file in this root node belongs to a visible folder
+                  const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
+                    if (node.name && !node.children) {
+                      // This is a file - check if its top-level folder is visible
+                      const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
+                      const firstSlash = fullPath.indexOf('/');
+                      const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
+                      return isRootFolderVisible(topLevelFolder);
+                    }
+
+                    if (node.children) {
+                      return node.children.some((child: any) =>
+                        hasVisibleFiles(child, currentPath ? `${currentPath}/${node.name}` : node.name)
+                      );
+                    }
+
+                    return false;
+                  };
+
+                  return hasVisibleFiles(rootNode);
+                })
+                .reduce((total, node) => {
+                  const counts = countFiles(node);
+                  return total + counts.files + counts.folders;
+                }, 0)} items
             </span>
           )}
         </div>
         <div className="status-shortcuts">
           <span><span className="kbd">Ctrl+B</span> Toggle Panel</span>
+          <span><span className="kbd">Ctrl+F</span> Filter Toggle</span>
+          <span><span className="kbd">Ctrl+S</span> Sort Direction</span>
+          <span><span className="kbd">Ctrl+1/2/3</span> Sort By</span>
           <span><span className="kbd">Ctrl+E</span> Expand All</span>
           <span><span className="kbd">Ctrl+W</span> Collapse All</span>
           <span><span className="kbd">Ctrl+R</span> Refresh</span>
