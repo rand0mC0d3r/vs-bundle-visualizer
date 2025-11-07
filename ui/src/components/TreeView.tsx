@@ -102,14 +102,25 @@ export const TreeView: React.FC<TreeViewProps> = ({
           }
         });
       }
-    });    return map;
-  }, [bundleData]);
+    });
+
+    return map;
+  }, [bundleData, libraryFilters]);
 
   // Function to check if a node matches the current filters
-  const nodeMatchesFilters = (node: any): boolean => {
+  const nodeMatchesFilters = (node: any, currentPath: string = ''): boolean => {
+    // No filters means show everything
     if (libraryFilters.length === 0) return true;
 
-    const bundleInfo = dependencyMap[node.name];
+    // Construct the full path for this node
+    const fullPath = currentPath
+
+    // Check if this node corresponds to a bundle file
+    const bundleInfo = dependencyMap[fullPath];
+
+    console.log('Checking node:', node.name, 'Full path:', fullPath, 'Bundle info:', bundleInfo, 'Available keys:', Object.keys(dependencyMap), libraryFilters);
+
+    // If this is a bundle file (has bundle info)
     if (bundleInfo) {
       // For vendor bundles, check if the main library matches any filter
       if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
@@ -124,17 +135,17 @@ export const TreeView: React.FC<TreeViewProps> = ({
         });
       }
 
-      // If it's a bundle but doesn't match, hide it
+      // If it's a bundle but doesn't match any filter, hide it
       return false;
     }
 
-    // For non-bundle nodes, check if they have children that match
+    // For non-bundle nodes (folders, internal files), check if they contain matching children
     if (node.children && node.children.length > 0) {
-      return node.children.some((child: any) => nodeMatchesFilters(child));
+      return node.children.some((child: any) => nodeMatchesFilters(child, fullPath));
     }
 
-    // For leaf nodes that aren't bundles, show them only if no filters are active
-    return false;
+    // For leaf nodes that aren't bundles, show them (they're internal files within matching bundles)
+    return true;
   };
 
   const sortNodes = (nodes: any[]): any[] => {
@@ -206,8 +217,9 @@ export const TreeView: React.FC<TreeViewProps> = ({
     const isSelected = selectedNode === nodeId;
     const nodeSize = getNodeSize(node, bundleData);
 
-    // Check if this is a bundle file and get dependency info
-    const bundleInfo = dependencyMap[node.name];
+    // Check if this is a bundle file and get dependency info using the full path
+    const fullPath = nodeId; // nodeId is the full path
+    const bundleInfo = dependencyMap[fullPath];
     const isBundle = !!bundleInfo;
 
     return (
@@ -325,7 +337,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
               // Apply library filtering
               if (shouldShow) {
-                shouldShow = nodeMatchesFilters(child);
+                shouldShow = nodeMatchesFilters(child, nodeId);
               }
 
               return shouldShow;
@@ -374,7 +386,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
             const isVisible = isRootFolderVisible(topLevelFolder);
 
             // Also check if it matches library filters
-            return isVisible && nodeMatchesFilters(node);
+            return isVisible && nodeMatchesFilters(node, currentPath);
           }
 
           if (node.children) {
