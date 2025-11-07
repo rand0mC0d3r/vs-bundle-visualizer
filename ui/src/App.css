@@ -365,11 +365,11 @@
 
 .dependency-info {
   margin-top: 4px;
-  margin-bottom: 8px;
   font-size: 0.85em;
 }
 
 .dependency-section {
+  width: 400px;
   margin-bottom: 4px;
 }
 

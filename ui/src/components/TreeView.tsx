@@ -219,7 +219,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
                 // Vendor bundle - show what assets use it
                 bundleInfo.consumers.length > 0 && (
                   <div className="dependency-section">
-                    <div className="dependency-label">📦 Used by:</div>
+                    {/* <div className="dependency-label">📦 Used by:</div> */}
                     <div className="dependency-list">
                       {bundleInfo.consumers.map(consumer => (
                         <span key={consumer} className="dependency-item consumer-item">
@@ -233,7 +233,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
                 // Asset bundle - show what vendors it depends on
                 bundleInfo.dependencies.length > 0 && (
                   <div className="dependency-section">
-                    <div className="dependency-label">🔗 Dependencies:</div>
+                    {/* <div className="dependency-label">🔗 Dependencies:</div> */}
                     <div className="dependency-list">
                       {bundleInfo.dependencies.map(dep => {
                         const depInfo = dependencyMap[dep];
