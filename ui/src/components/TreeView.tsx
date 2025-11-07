@@ -118,12 +118,12 @@ export const TreeView: React.FC<TreeViewProps> = ({
     // Check if this node corresponds to a bundle file
     const bundleInfo = dependencyMap[fullPath];
 
-    console.log('Checking node:', node.name, 'Full path:', fullPath, 'Bundle info:', bundleInfo, 'Available keys:', Object.keys(dependencyMap), libraryFilters);
 
     // If this is a bundle file (has bundle info)
     if (bundleInfo) {
       // For vendor bundles, check if the main library matches any filter
       if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
+
         return libraryFilters.includes(bundleInfo.mainLibrary);
       }
 
@@ -145,7 +145,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
     }
 
     // For leaf nodes that aren't bundles, show them (they're internal files within matching bundles)
-    return true;
+    return false;
   };
 
   const sortNodes = (nodes: any[]): any[] => {
