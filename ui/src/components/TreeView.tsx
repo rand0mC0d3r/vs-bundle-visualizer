@@ -113,17 +113,15 @@ export const TreeView: React.FC<TreeViewProps> = ({
     if (libraryFilters.length === 0) return true;
 
     // Construct the full path for this node
-    const fullPath = currentPath
+    const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
 
     // Check if this node corresponds to a bundle file
     const bundleInfo = dependencyMap[fullPath];
-
 
     // If this is a bundle file (has bundle info)
     if (bundleInfo) {
       // For vendor bundles, check if the main library matches any filter
       if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
-
         return libraryFilters.includes(bundleInfo.mainLibrary);
       }
 
@@ -145,7 +143,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
     }
 
     // For leaf nodes that aren't bundles, show them (they're internal files within matching bundles)
-    return false;
+    return true;
   };
 
   const sortNodes = (nodes: any[]): any[] => {
@@ -249,10 +247,10 @@ export const TreeView: React.FC<TreeViewProps> = ({
             </div>
 
             <div className={`tree-label ${isFolder ? 'folder' : ''}`}>
-              {node.name} {" "}
+              {node.name}
               {bundleInfo?.mainLibrary && (
                 <span
-                  className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
+                  className={`main-library clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (libraryFilters.includes(bundleInfo.mainLibrary!)) {
@@ -263,7 +261,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
                   }}
                   title={`${libraryFilters.includes(bundleInfo.mainLibrary!) ? 'Remove' : 'Add'} filter: ${bundleInfo.mainLibrary}`}
                 >
-                  {bundleInfo.mainLibrary}
+                  ({bundleInfo.mainLibrary})
                 </span>
               )}
             </div>

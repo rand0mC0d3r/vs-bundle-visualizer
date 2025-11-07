@@ -1,7 +1,18 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BundleData } from '../types';
 import { formatFileSize, getFileExtension, getFileIcon } from '../utils/fileUtils';
 import { FolderNode } from './types';
+
+interface DependencyInfo {
+  consumers: string[];
+  dependencies: string[];
+  isVendor: boolean;
+  mainLibrary?: string;
+}
+
+interface DependencyMap {
+  [nodeName: string]: DependencyInfo;
+}
 
 interface FolderPanelProps {
   bundleData: BundleData;
@@ -10,9 +21,12 @@ interface FolderPanelProps {
   selectedNode: string | null;
   hideZeroByteFiles: boolean;
   hiddenRootFolders: Set<string>;
+  libraryFilters: string[];
   onToggleFolder: (folderPath: string) => void;
   onSelectFolder: (folderPath: string) => void;
   onScrollToFile: (filePath: string) => void;
+  onAddLibraryFilter: (library: string) => void;
+  onRemoveLibraryFilter: (library: string) => void;
 }
 
 export const FolderPanel: React.FC<FolderPanelProps> = ({
@@ -22,10 +36,106 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
   selectedNode,
   hideZeroByteFiles,
   hiddenRootFolders,
+  libraryFilters,
   onToggleFolder,
   onSelectFolder,
-  onScrollToFile
+  onScrollToFile,
+  onAddLibraryFilter,
+  onRemoveLibraryFilter
 }) => {
+  // Extract dependency relationships from nodeMetas (similar to TreeView)
+  const dependencyMap = useMemo((): DependencyMap => {
+    const map: DependencyMap = {};
+
+    if (!bundleData.nodeMetas) return map;
+
+    // First pass: identify vendor vs asset bundles and create base entries
+    Object.entries(bundleData.nodeMetas).forEach(([, meta]: [string, any]) => {
+      const bundleName = Object.keys(meta.moduleParts || {})[0];
+      if (!bundleName) return;
+
+      const isVendor = bundleName.startsWith('vendor/');
+      const isAsset = bundleName.startsWith('assets/');
+
+      if (isVendor || isAsset) {
+        if (!map[bundleName]) {
+          map[bundleName] = {
+            consumers: [],
+            dependencies: [],
+            isVendor,
+            mainLibrary: undefined
+          };
+        }
+
+        // Extract main library name for vendor bundles
+        if (isVendor && meta.id) {
+          const libMatch = meta.id.match(/node_modules\/([^\/]+)/);
+          if (libMatch && !map[bundleName].mainLibrary) {
+            map[bundleName].mainLibrary = libMatch[1];
+          }
+        }
+      }
+    });
+
+    // Second pass: map dependencies between bundles
+    Object.entries(bundleData.nodeMetas).forEach(([, meta]: [string, any]) => {
+      const bundleName = Object.keys(meta.moduleParts || {})[0];
+      if (!bundleName) return;
+
+      const isAsset = bundleName.startsWith('assets/');
+
+      if (isAsset && meta.imported) {
+        // Asset bundle importing from vendors
+        meta.imported.forEach((imported: any) => {
+          const importedMeta = bundleData.nodeMetas?.[imported.uid];
+          if (importedMeta) {
+            const importedBundle = Object.keys(importedMeta.moduleParts || {})[0];
+            if (importedBundle && importedBundle.startsWith('vendor/')) {
+              if (!map[bundleName].dependencies.includes(importedBundle)) {
+                map[bundleName].dependencies.push(importedBundle);
+              }
+              if (!map[importedBundle].consumers.includes(bundleName)) {
+                map[importedBundle].consumers.push(bundleName);
+              }
+            }
+          }
+        });
+      }
+    });
+
+    return map;
+  }, [bundleData]);
+
+  // Function to check if a file matches the current library filters
+  const fileMatchesLibraryFilters = (filePath: string): boolean => {
+    // No filters means show everything
+    if (libraryFilters.length === 0) return true;
+
+    // Check if this file corresponds to a bundle file
+    const bundleInfo = dependencyMap[filePath];
+
+    if (bundleInfo) {
+      // For vendor bundles, check if the main library matches any filter
+      if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
+        return libraryFilters.includes(bundleInfo.mainLibrary);
+      }
+
+      // For asset bundles, check if any of their dependencies match the filters
+      if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
+        return bundleInfo.dependencies.some(dep => {
+          const depInfo = dependencyMap[dep];
+          return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
+        });
+      }
+
+      // If it's a bundle but doesn't match any filter, hide it
+      return false;
+    }
+
+    // For non-bundle files, show them if they are part of matching bundles
+    return true;
+  };
+
   const buildFolderStructure = (bundleData: BundleData): FolderNode => {
     const root: FolderNode = {
       name: 'root',
@@ -83,13 +193,14 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
       });
     }
 
-    // Filter files based on visible root folders and zero-byte filter
+    // Filter files based on visible root folders, zero-byte filter, and library filters
     const filteredFiles = allFiles.filter(file => {
       const firstSlash = file.fullPath.indexOf('/');
       const topLevelFolder = firstSlash > 0 ? file.fullPath.substring(0, firstSlash) : '(root)';
       const isVisible = isRootFolderVisible(topLevelFolder);
       const isNotZeroByte = !hideZeroByteFiles || file.size > 0;
-      return isVisible && isNotZeroByte;
+      const matchesLibraryFilter = fileMatchesLibraryFilters(file.fullPath);
+      return isVisible && isNotZeroByte && matchesLibraryFilter;
     });
 
     // Build folder structure
@@ -250,27 +361,100 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
         {hasChildren && isExpanded && (
           <div className="tree-children">
             {folder.children.map(child => renderFolderTree(child, level + 1))}
-            {folder.files.map(file => (
-              <div
-                key={file.fullPath}
-                className={`tree-item ${selectedFolder === file.fullPath || selectedNode === file.fullPath ? 'selected' : ''}`}
-                style={{ paddingLeft: (level + 1) * 16 + 4 }}
-                onClick={() => onScrollToFile(file.fullPath)}
-              >
-                <div className="tree-item-content">
-                  <div className="tree-icon" />
-                  <div className={`tree-icon file ${getFileExtension(file.name)}`}>
-                    {getFileIcon(file.name, false)}
+            {folder.files.map(file => {
+              const bundleInfo = dependencyMap[file.fullPath];
+              const isBundle = !!bundleInfo;
+
+              return (
+                <div
+                  key={file.fullPath}
+                  className={`tree-item ${selectedFolder === file.fullPath || selectedNode === file.fullPath ? 'selected' : ''} ${isBundle ? 'bundle-item' : ''}`}
+                  style={{ paddingLeft: (level + 1) * 16 + 4 }}
+                  onClick={() => onScrollToFile(file.fullPath)}
+                >
+                  <div className="tree-item-content">
+                    <div className="tree-icon" />
+                    <div className={`tree-icon file ${getFileExtension(file.name)}`}>
+                      {getFileIcon(file.name, false)}
+                    </div>
+                    <div className="tree-label">
+                      {file.name}
+                      {bundleInfo?.mainLibrary && (
+                        <span
+                          className={`main-library clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            if (libraryFilters.includes(bundleInfo.mainLibrary!)) {
+                              onRemoveLibraryFilter(bundleInfo.mainLibrary!);
+                            } else {
+                              onAddLibraryFilter(bundleInfo.mainLibrary!);
+                            }
+                          }}
+                          title={`${libraryFilters.includes(bundleInfo.mainLibrary!) ? 'Remove' : 'Add'} filter: ${bundleInfo.mainLibrary}`}
+                        >
+                          ({bundleInfo.mainLibrary})
+                        </span>
+                      )}
+                    </div>
+                    <div className="tree-size">
+                      {formatFileSize(file.size)}
+                    </div>
                   </div>
-                  <div className="tree-label">
-                    {file.name}
-                  </div>
-                  <div className="tree-size">
-                    {formatFileSize(file.size)}
-                  </div>
+
+                  {/* Show dependency information for bundle files */}
+                  {bundleInfo && (
+                    <div className="dependency-info" style={{ paddingLeft: (level + 2) * 16 + 24 }}>
+                      {bundleInfo.isVendor ? (
+                        // Vendor bundle - show what assets use it
+                        bundleInfo.consumers.length > 0 && (
+                          <div className="dependency-section">
+                            <div className="dependency-list">
+                              {bundleInfo.consumers.map(consumer => (
+                                <span key={consumer} className="dependency-item consumer-item">
+                                  {consumer.replace('assets/', '')}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      ) : (
+                        // Asset bundle - show what vendors it depends on
+                        bundleInfo.dependencies.length > 0 && (
+                          <div className="dependency-section">
+                            <div className="dependency-list">
+                              {bundleInfo.dependencies.map(dep => {
+                                const depInfo = dependencyMap[dep];
+                                const libraryName = depInfo?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '');
+                                const isActive = depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
+                                return (
+                                  <span
+                                    key={dep}
+                                    className={`dependency-item dependency-item-vendor clickable ${isActive ? 'active' : ''}`}
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (depInfo?.mainLibrary) {
+                                        if (isActive) {
+                                          onRemoveLibraryFilter(depInfo.mainLibrary);
+                                        } else {
+                                          onAddLibraryFilter(depInfo.mainLibrary);
+                                        }
+                                      }
+                                    }}
+                                    title={`${isActive ? 'Remove' : 'Add'} filter: ${libraryName}`}
+                                  >
+                                    {libraryName}
+                                  </span>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  )}
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

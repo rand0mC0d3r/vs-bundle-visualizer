@@ -226,9 +226,12 @@ function App() {
                 selectedNode={selectedNode}
                 hideZeroByteFiles={hideZeroByteFiles}
                 hiddenRootFolders={hiddenRootFolders}
+                libraryFilters={libraryFilters}
                 onToggleFolder={toggleFolder}
                 onSelectFolder={selectFolder}
                 onScrollToFile={scrollToFileInMainContent}
+                onAddLibraryFilter={addLibraryFilter}
+                onRemoveLibraryFilter={removeLibraryFilter}
               />
             )}
             {showTreemapPanel && (
