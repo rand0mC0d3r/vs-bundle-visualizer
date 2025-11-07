@@ -18,6 +18,7 @@ function App() {
   const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showSidePanel, setShowSidePanel] = useState<boolean>(true);
+  const [showTreemapPanel, setShowTreemapPanel] = useState<boolean>(false);
   const [sortCriteria, setSortCriteria] = useState<'filename' | 'fileCount' | 'fileSize'>('filename');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [hiddenRootFolders, setHiddenRootFolders] = useState<Set<string>>(new Set());
@@ -68,6 +69,10 @@ function App() {
           case 'b':
             event.preventDefault();
             setShowSidePanel(!showSidePanel);
+            break;
+          case 't':
+            event.preventDefault();
+            setShowTreemapPanel(!showTreemapPanel);
             break;
           case 's':
             event.preventDefault();
@@ -618,6 +623,93 @@ function App() {
     );
   };
 
+  const renderTreemap = (folder: FolderNode): JSX.Element => {
+    const totalSize = folder.totalSize;
+
+    const getFileColor = (fileName: string): string => {
+      const ext = getFileExtension(fileName);
+      const colorMap: { [key: string]: string } = {
+        js: '#f7df1e',
+        ts: '#007acc',
+        tsx: '#007acc',
+        jsx: '#f7df1e',
+        css: '#1572b6',
+        scss: '#c6538c',
+        html: '#e34f26',
+        json: '#cbcb41',
+        md: '#083fa1',
+        png: '#a074c4',
+        jpg: '#a074c4',
+        jpeg: '#a074c4',
+        gif: '#a074c4',
+        svg: '#a074c4',
+        ico: '#a074c4'
+      };
+      return colorMap[ext] || '#6c757d';
+    };
+
+    const renderFolder = (folderData: FolderNode): JSX.Element => {
+      if (folderData.totalSize === 0) return <></>;
+
+      const allFiles = [...folderData.files];
+      const allFolders = folderData.children.filter(child => child.totalSize > 0);
+
+      // Sort by size for better layout
+      allFiles.sort((a, b) => b.size - a.size);
+      allFolders.sort((a, b) => b.totalSize - a.totalSize);
+
+      return (
+        <div className="treemap-folder" key={folderData.path}>
+          {folderData.name && folderData.name !== 'root' && (
+            <div className="treemap-folder-header">
+              <span className="treemap-folder-name">{folderData.name}</span>
+              <span className="treemap-folder-size">{formatFileSize(folderData.totalSize)}</span>
+            </div>
+          )}
+          <div className="treemap-container">
+            {allFolders.map(subfolder => renderFolder(subfolder))}
+            {allFiles.map(file => {
+              const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
+              const minSize = 20; // Minimum tile size in pixels
+              const maxSize = 200; // Maximum tile size in pixels
+              const size = Math.max(minSize, Math.min(maxSize, Math.sqrt(sizeRatio) * 300));
+
+              return (
+                <div
+                  key={file.fullPath}
+                  className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''}`}
+                  style={{
+                    width: `${size}px`,
+                    height: `${size * 0.75}px`,
+                    backgroundColor: getFileColor(file.name),
+                    minWidth: `${minSize}px`,
+                    minHeight: `${minSize * 0.75}px`
+                  }}
+                  onClick={() => scrollToFileInMainContent(file.fullPath)}
+                  title={`${file.name} - ${formatFileSize(file.size)}`}
+                >
+                  <div className="treemap-file-content">
+                    <div className="treemap-file-icon">
+                      {getFileIcon(file.name, false)}
+                    </div>
+                    <div className="treemap-file-name">
+                      {file.name.length > 12 ? `${file.name.substring(0, 9)}...` : file.name}
+                    </div>
+                    <div className="treemap-file-size">
+                      {formatFileSize(file.size)}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      );
+    };
+
+    return renderFolder(folder);
+  };
+
   return (
     <div className={`app theme-${theme.kind === 1 ? 'light' : 'dark'}`}>
       <div className="header">
@@ -687,6 +779,13 @@ function App() {
           </button>
           <button
             className="refresh-button"
+            onClick={() => setShowTreemapPanel(!showTreemapPanel)}
+            title="Toggle treemap panel"
+          >
+            {showTreemapPanel ? 'Hide Treemap' : 'Show Treemap'}
+          </button>
+          <button
+            className="refresh-button"
             onClick={expandAll}
             title="Expand all folders"
           >
@@ -728,7 +827,20 @@ function App() {
                 </div>
               </div>
             )}
-            <div className={`tree-container ${showSidePanel ? 'with-sidebar' : ''}`}>
+            {showTreemapPanel && (
+              <div className="treemap-panel">
+                <div className="side-panel-header">
+                  <h3>File Size Visualizer</h3>
+                </div>
+                <div className="treemap-panel-content">
+                  {(() => {
+                    const folderStructure = buildFolderStructure(bundleData);
+                    return renderTreemap(folderStructure);
+                  })()}
+                </div>
+              </div>
+            )}
+            <div className={`tree-container ${showSidePanel || showTreemapPanel ? 'with-sidebar' : ''}`}>
               {sortNodes(bundleData.tree.children.filter(rootNode => {
                 // Check if any file in this root node belongs to a visible folder
                 const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
@@ -827,6 +939,7 @@ function App() {
         </div>
         <div className="status-shortcuts">
           <span><span className="kbd">Ctrl+B</span> Toggle Panel</span>
+          <span><span className="kbd">Ctrl+T</span> Toggle Treemap</span>
           <span><span className="kbd">Ctrl+F</span> Filter Toggle</span>
           <span><span className="kbd">Ctrl+S</span> Sort Direction</span>
           <span><span className="kbd">Ctrl+1/2/3</span> Sort By</span>
