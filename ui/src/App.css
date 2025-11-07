@@ -407,6 +407,54 @@
   color: var(--vscode-terminal-background, #000000);
 }
 
+.dependency-item.clickable {
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.dependency-item.clickable:hover {
+  background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.2));
+  opacity: 0.8;
+}
+
+/* Library Filters */
+.library-filters-header {
+  background: var(--vscode-inputValidation-infoBackground, #063B49);
+  border: 1px solid var(--vscode-inputValidation-infoBorder, #007acc);
+  padding: 8px 12px;
+  margin-bottom: 8px;
+  border-radius: 4px;
+}
+
+.library-filters-label {
+  color: var(--vscode-inputValidation-infoForeground, #ffffff);
+  font-size: 0.9em;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.library-filters-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.library-filter-item {
+  background: var(--vscode-button-background, #0e639c);
+  color: var(--vscode-button-foreground, #ffffff);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85em;
+  font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace);
+  transition: background-color 0.2s ease;
+  user-select: none;
+}
+
+.library-filter-item:hover {
+  background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
 /* Status bar */
 .status-bar {
   border-top: 1px solid var(--vscode-panel-border);

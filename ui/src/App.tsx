@@ -24,6 +24,7 @@ function App() {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [hiddenRootFolders, setHiddenRootFolders] = useState<Set<string>>(new Set());
   const [hideZeroByteFiles, setHideZeroByteFiles] = useState<boolean>(false);
+  const [libraryFilters, setLibraryFilters] = useState<string[]>([]);
 
   // Event Handlers
   const toggleNode = (nodeId: string) => {
@@ -96,6 +97,16 @@ function App() {
   const collapseAll = () => {
     setExpandedNodes(new Set());
     setExpandedFolders(new Set());
+  };
+
+  const addLibraryFilter = (library: string) => {
+    if (!libraryFilters.includes(library)) {
+      setLibraryFilters([...libraryFilters, library]);
+    }
+  };
+
+  const removeLibraryFilter = (library: string) => {
+    setLibraryFilters(libraryFilters.filter(f => f !== library));
   };
 
   const toggleSortDirection = () => {
@@ -238,8 +249,11 @@ function App() {
                 sortDirection={sortDirection}
                 hideZeroByteFiles={hideZeroByteFiles}
                 hiddenRootFolders={hiddenRootFolders}
+                libraryFilters={libraryFilters}
                 onToggleNode={toggleNode}
                 onSelectNode={selectNode}
+                onAddLibraryFilter={addLibraryFilter}
+                onRemoveLibraryFilter={removeLibraryFilter}
               />
             </div>
           </div>

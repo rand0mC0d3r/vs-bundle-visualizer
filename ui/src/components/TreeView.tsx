@@ -11,8 +11,11 @@ interface TreeViewProps {
   sortDirection: SortDirection;
   hideZeroByteFiles: boolean;
   hiddenRootFolders: Set<string>;
+  libraryFilters: string[];
   onToggleNode: (nodeId: string) => void;
   onSelectNode: (nodeId: string) => void;
+  onAddLibraryFilter: (library: string) => void;
+  onRemoveLibraryFilter: (library: string) => void;
 }
 
 interface DependencyInfo {
@@ -34,8 +37,11 @@ export const TreeView: React.FC<TreeViewProps> = ({
   sortDirection,
   hideZeroByteFiles,
   hiddenRootFolders,
+  libraryFilters,
   onToggleNode,
-  onSelectNode
+  onSelectNode,
+  onAddLibraryFilter,
+  onRemoveLibraryFilter
 }) => {
 
   // Extract dependency relationships from nodeMetas
@@ -98,6 +104,29 @@ export const TreeView: React.FC<TreeViewProps> = ({
       }
     });    return map;
   }, [bundleData]);
+
+  // Function to check if a node matches the current filters
+  const nodeMatchesFilters = (node: any): boolean => {
+    if (libraryFilters.length === 0) return true;
+
+    const bundleInfo = dependencyMap[node.name];
+    if (!bundleInfo) return true;
+
+    // For vendor bundles, check if the main library matches any filter
+    if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
+      return libraryFilters.includes(bundleInfo.mainLibrary);
+    }
+
+    // For asset bundles, check if any of their dependencies match the filters
+    if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
+      return bundleInfo.dependencies.some(dep => {
+        const depInfo = dependencyMap[dep];
+        return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
+      });
+    }
+
+    return true;
+  };
 
   const sortNodes = (nodes: any[]): any[] => {
     return [...nodes].sort((a, b) => {
@@ -239,9 +268,20 @@ export const TreeView: React.FC<TreeViewProps> = ({
                     <div className="dependency-list">
                       {bundleInfo.dependencies.map(dep => {
                         const depInfo = dependencyMap[dep];
+                        const libraryName = depInfo?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '');
                         return (
-                          <span key={dep} className="dependency-item dependency-item-vendor">
-                            {depInfo?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '')}
+                          <span
+                            key={dep}
+                            className="dependency-item dependency-item-vendor clickable"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              if (depInfo?.mainLibrary) {
+                                onAddLibraryFilter(depInfo.mainLibrary);
+                              }
+                            }}
+                            title={`Filter by ${libraryName}`}
+                          >
+                            {libraryName}
                           </span>
                         );
                       })}
@@ -256,11 +296,19 @@ export const TreeView: React.FC<TreeViewProps> = ({
         {hasChildren && isExpanded && (
           <div className="tree-children">
             {sortNodes(node.children.filter((child: any) => {
+              let shouldShow = true;
+
               if (hideZeroByteFiles) {
                 const childSize = getNodeSize(child, bundleData);
-                return childSize > 0;
+                shouldShow = childSize > 0;
               }
-              return true;
+
+              // Apply library filtering
+              if (shouldShow) {
+                shouldShow = nodeMatchesFilters(child);
+              }
+
+              return shouldShow;
             })).map((child: any) =>
               renderTreeNode(child, nodeId, level + 1)
             )}
@@ -276,15 +324,37 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
   return (
     <div className="tree-container">
+      {/* Library Filters Header */}
+      {libraryFilters.length > 0 && (
+        <div className="library-filters-header">
+          <div className="library-filters-label">Filtering by libraries:</div>
+          <div className="library-filters-list">
+            {libraryFilters.map(filter => (
+              <span
+                key={filter}
+                className="library-filter-item"
+                onClick={() => onRemoveLibraryFilter(filter)}
+                title={`Remove filter: ${filter}`}
+              >
+                {filter} ×
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {sortNodes(bundleData.tree.children.filter(rootNode => {
-        // Check if any file in this root node belongs to a visible folder
+        // Check if any file in this root node belongs to a visible folder and matches filters
         const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
           if (node.name && !node.children) {
             // This is a file - check if its top-level folder is visible
             const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
             const firstSlash = fullPath.indexOf('/');
             const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
-            return isRootFolderVisible(topLevelFolder);
+            const isVisible = isRootFolderVisible(topLevelFolder);
+
+            // Also check if it matches library filters
+            return isVisible && nodeMatchesFilters(node);
           }
 
           if (node.children) {
