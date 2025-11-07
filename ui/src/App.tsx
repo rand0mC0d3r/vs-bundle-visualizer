@@ -22,6 +22,7 @@ function App() {
   const [sortCriteria, setSortCriteria] = useState<'filename' | 'fileCount' | 'fileSize'>('filename');
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [hiddenRootFolders, setHiddenRootFolders] = useState<Set<string>>(new Set());
+  const [hideZeroByteFiles, setHideZeroByteFiles] = useState<boolean>(false);
   const [vscodeApi] = useState(() => {
     // Use mock API in development mode, real API in VS Code
     if (isDevelopmentMode()) {
@@ -97,6 +98,10 @@ function App() {
             if (rootFolders.length > 0) {
               toggleRootFolderVisibility(rootFolders[0]);
             }
+            break;
+          case 'h':
+            event.preventDefault();
+            setHideZeroByteFiles(!hideZeroByteFiles);
             break;
         }
       }
@@ -219,11 +224,13 @@ function App() {
       });
     }
 
-    // Filter files based on visible root folders
+    // Filter files based on visible root folders and zero-byte filter
     const filteredFiles = allFiles.filter(file => {
       const firstSlash = file.fullPath.indexOf('/');
       const topLevelFolder = firstSlash > 0 ? file.fullPath.substring(0, firstSlash) : '(root)';
-      return isRootFolderVisible(topLevelFolder);
+      const isVisible = isRootFolderVisible(topLevelFolder);
+      const isNotZeroByte = !hideZeroByteFiles || file.size > 0;
+      return isVisible && isNotZeroByte;
     });
 
     // Build folder structure
@@ -270,6 +277,27 @@ function App() {
     };
 
     calculateFolderSize(root);
+
+    // Remove empty folders if filter is enabled
+    if (hideZeroByteFiles) {
+      const removeEmptyFolders = (folder: FolderNode): FolderNode => {
+        // First, recursively clean children
+        const cleanedChildren = folder.children
+          .map(child => removeEmptyFolders(child))
+          .filter(child => child.totalSize > 0 || child.files.length > 0 || child.children.length > 0);
+
+        return {
+          ...folder,
+          children: cleanedChildren
+        };
+      };
+
+      const cleanedRoot = removeEmptyFolders(root);
+      // Recalculate sizes after cleaning
+      calculateFolderSize(cleanedRoot);
+      return cleanedRoot;
+    }
+
     return root;
   };
 
@@ -522,7 +550,13 @@ function App() {
 
         {hasChildren && isExpanded && (
           <div className="tree-children">
-            {sortNodes(node.children).map((child: any) =>
+            {sortNodes(node.children.filter((child: any) => {
+              if (hideZeroByteFiles) {
+                const childSize = getNodeSize(child, bundleData!);
+                return childSize > 0;
+              }
+              return true;
+            })).map((child: any) =>
               renderTreeNode(child, nodeId, level + 1)
             )}
           </div>
@@ -672,7 +706,9 @@ function App() {
       if (folderData.totalSize === 0) return <></>;
 
       const collapsed = collapseFolders(folderData);
-      const allFiles = [...collapsed.files];
+      const allFiles = hideZeroByteFiles
+        ? collapsed.files.filter(file => file.size > 0)
+        : [...collapsed.files];
       const allFolders = collapsed.children.filter(child => child.totalSize > 0);
 
       // Sort by size for better layout
@@ -813,6 +849,13 @@ function App() {
             title="Toggle treemap panel"
           >
             {showTreemapPanel ? 'Hide Treemap' : 'Show Treemap'}
+          </button>
+          <button
+            className="refresh-button"
+            onClick={() => setHideZeroByteFiles(!hideZeroByteFiles)}
+            title="Hide files with 0B size and empty folders"
+          >
+            {hideZeroByteFiles ? 'Show 0B Files' : 'Hide 0B Files'}
           </button>
           <button
             className="refresh-button"
@@ -971,6 +1014,7 @@ function App() {
           <span><span className="kbd">Ctrl+B</span> Toggle Panel</span>
           <span><span className="kbd">Ctrl+T</span> Toggle Treemap</span>
           <span><span className="kbd">Ctrl+F</span> Filter Toggle</span>
+          <span><span className="kbd">Ctrl+H</span> Hide 0B Files</span>
           <span><span className="kbd">Ctrl+S</span> Sort Direction</span>
           <span><span className="kbd">Ctrl+1/2/3</span> Sort By</span>
           <span><span className="kbd">Ctrl+E</span> Expand All</span>

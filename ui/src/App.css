@@ -50,6 +50,12 @@
   background-color: var(--vscode-button-hoverBackground);
 }
 
+.refresh-button.active {
+  background-color: var(--vscode-button-secondaryBackground);
+  color: var(--vscode-button-secondaryForeground);
+  border: 1px solid var(--vscode-button-border);
+}
+
 .content {
   flex: 1;
   overflow: hidden;
