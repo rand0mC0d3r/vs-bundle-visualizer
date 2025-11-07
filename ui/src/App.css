@@ -368,6 +368,9 @@
   flex: 1;
   overflow-y: auto;
   padding: 4px;
+  font-family: var(--vscode-editor-font-family);
+  font-size: 13px;
+  line-height: 1.4;
 }
 
 .tree-container.with-sidebar {
