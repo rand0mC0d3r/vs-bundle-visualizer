@@ -110,22 +110,31 @@ export const TreeView: React.FC<TreeViewProps> = ({
     if (libraryFilters.length === 0) return true;
 
     const bundleInfo = dependencyMap[node.name];
-    if (!bundleInfo) return true;
+    if (bundleInfo) {
+      // For vendor bundles, check if the main library matches any filter
+      if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
+        return libraryFilters.includes(bundleInfo.mainLibrary);
+      }
 
-    // For vendor bundles, check if the main library matches any filter
-    if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
-      return libraryFilters.includes(bundleInfo.mainLibrary);
+      // For asset bundles, check if any of their dependencies match the filters
+      if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
+        return bundleInfo.dependencies.some(dep => {
+          const depInfo = dependencyMap[dep];
+          return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
+        });
+      }
+
+      // If it's a bundle but doesn't match, hide it
+      return false;
     }
 
-    // For asset bundles, check if any of their dependencies match the filters
-    if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
-      return bundleInfo.dependencies.some(dep => {
-        const depInfo = dependencyMap[dep];
-        return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
-      });
+    // For non-bundle nodes, check if they have children that match
+    if (node.children && node.children.length > 0) {
+      return node.children.some((child: any) => nodeMatchesFilters(child));
     }
 
-    return true;
+    // For leaf nodes that aren't bundles, show them only if no filters are active
+    return false;
   };
 
   const sortNodes = (nodes: any[]): any[] => {
