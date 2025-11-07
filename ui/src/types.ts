@@ -1,5 +1,15 @@
 export interface BundleData {
   [key: string]: any;
+  tree?: {
+    children?: TreeNode[];
+  };
+}
+
+export interface TreeNode {
+  name: string;
+  id?: string;
+  value?: number;
+  children?: TreeNode[];
 }
 
 export interface VSCodeTheme {

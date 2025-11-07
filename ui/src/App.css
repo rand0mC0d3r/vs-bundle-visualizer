@@ -121,3 +121,169 @@
 .theme-dark {
   --text-muted: #969696;
 }
+
+/* File/Folder Tree Viewer Styles */
+.tree-container {
+  font-family: var(--vscode-editor-font-family);
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--vscode-editor-foreground);
+  padding: 0;
+  margin: 0;
+}
+
+.tree-item {
+  display: flex;
+  align-items: center;
+  padding: 2px 4px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 2px;
+  transition: background-color 0.1s ease;
+}
+
+.tree-item:hover {
+  background-color: var(--vscode-list-hoverBackground, rgba(255, 255, 255, 0.1));
+}
+
+.tree-item.selected {
+  background-color: var(--vscode-list-activeSelectionBackground, #094771);
+  color: var(--vscode-list-activeSelectionForeground, #ffffff);
+}
+
+.tree-item-content {
+  display: flex;
+  align-items: center;
+  flex: 1;
+  min-width: 0;
+}
+
+.tree-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--vscode-symbolIcon-folderForeground, #dcb67a);
+}
+
+.tree-icon.file {
+  color: var(--vscode-symbolIcon-fileForeground, #cccccc);
+}
+
+.tree-icon.expandable {
+  cursor: pointer;
+  color: var(--vscode-tree-tableColumnsBorder, #cccccc);
+  transition: color 0.1s ease;
+}
+
+.tree-icon.expandable:hover {
+  color: var(--vscode-editor-foreground);
+}
+
+.tree-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: 400;
+}
+
+.tree-label.folder {
+  font-weight: 500;
+}
+
+.tree-size {
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+  white-space: nowrap;
+}
+
+.tree-children {
+  margin-left: 16px;
+}
+
+.tree-children.collapsed {
+  display: none;
+}
+
+.tree-root {
+  border: 1px solid var(--vscode-panel-border);
+  border-radius: 4px;
+  margin-bottom: 8px;
+  overflow: hidden;
+}
+
+.tree-root-header {
+  background-color: var(--vscode-panel-background);
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--vscode-panel-border);
+  font-weight: 600;
+  color: var(--vscode-panelTitle-activeForeground);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tree-root-content {
+  padding: 8px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.file-stats {
+  display: flex;
+  gap: 16px;
+  font-size: 11px;
+  color: var(--vscode-descriptionForeground);
+}
+
+.file-type-icon {
+  margin-right: 4px;
+  opacity: 0.8;
+}
+
+/* File type specific icons and colors */
+.tree-icon.js { color: #f7df1e; }
+.tree-icon.ts { color: #007acc; }
+.tree-icon.css { color: #1572b6; }
+.tree-icon.html { color: #e34f26; }
+.tree-icon.json { color: #cbcb41; }
+.tree-icon.png, .tree-icon.jpg, .tree-icon.gif, .tree-icon.svg { color: #a074c4; }
+.tree-icon.md { color: #083fa1; }
+
+/* Status bar */
+.status-bar {
+  border-top: 1px solid var(--vscode-panel-border);
+  background-color: var(--vscode-statusBar-background, #007acc);
+  color: var(--vscode-statusBar-foreground, #ffffff);
+  padding: 4px 12px;
+  font-size: 11px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-info {
+  display: flex;
+  gap: 16px;
+}
+
+.status-shortcuts {
+  display: flex;
+  gap: 12px;
+  font-size: 10px;
+  opacity: 0.8;
+}
+
+.kbd {
+  background: rgba(255, 255, 255, 0.2);
+  padding: 1px 3px;
+  border-radius: 2px;
+  font-family: monospace;
+}
