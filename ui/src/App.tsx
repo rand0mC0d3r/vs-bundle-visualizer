@@ -169,6 +169,8 @@ function App() {
     onToggleRootFolderVisibility: toggleRootFolderVisibility
   });
 
+  const rootFolders = bundleData ? getRootFolders(bundleData) : [];
+
   return (
     <div className={`app theme-${theme.kind === 1 ? 'light' : 'dark'}`}>
       <Header
@@ -178,6 +180,7 @@ function App() {
         sortCriteria={sortCriteria}
         sortDirection={sortDirection}
         hiddenRootFolders={hiddenRootFolders}
+        rootFolders={rootFolders}
         onToggleSidePanel={() => setShowSidePanel(!showSidePanel)}
         onToggleTreemapPanel={() => setShowTreemapPanel(!showTreemapPanel)}
         onToggleZeroByteFiles={() => setHideZeroByteFiles(!hideZeroByteFiles)}

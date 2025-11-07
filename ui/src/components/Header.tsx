@@ -9,6 +9,7 @@ interface HeaderProps {
   sortCriteria: SortCriteria;
   sortDirection: SortDirection;
   hiddenRootFolders: Set<string>;
+  rootFolders: string[];
   onToggleSidePanel: () => void;
   onToggleTreemapPanel: () => void;
   onToggleZeroByteFiles: () => void;
@@ -27,6 +28,7 @@ export const Header: React.FC<HeaderProps> = ({
   sortCriteria,
   sortDirection,
   hiddenRootFolders,
+  rootFolders,
   onToggleSidePanel,
   onToggleTreemapPanel,
   onToggleZeroByteFiles,
@@ -39,59 +41,63 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   return (
     <div className="header">
-      <div className="header-content">
+      <div className="header-title">
         <h1>Bundle Visualizer</h1>
         {isDevelopmentMode() && (
-          <div className="dev-indicator">DEV</div>
+          <span className="dev-indicator">DEV</span>
         )}
       </div>
+
       <div className="toolbar">
-        <button
-          className="refresh-button"
-          onClick={onToggleSidePanel}
-          title="Toggle folder panel"
-        >
-          {showSidePanel ? 'Hide Folders' : 'Show Folders'}
-        </button>
-        <button
-          className="refresh-button"
-          onClick={onToggleTreemapPanel}
-          title="Toggle treemap panel"
-        >
-          {showTreemapPanel ? 'Hide Treemap' : 'Show Treemap'}
-        </button>
-        <button
-          className={`refresh-button ${hideZeroByteFiles ? 'active' : ''}`}
-          onClick={onToggleZeroByteFiles}
-          title="Hide files with 0B size and empty folders"
-        >
-          {hideZeroByteFiles ? 'Show 0B Files' : 'Hide 0B Files'}
-        </button>
-                <div className="toolbar-group">
+        <div className="toolbar-section">
+          <button
+            className="toolbar-button"
+            onClick={onToggleSidePanel}
+            title="Toggle folder panel"
+          >
+            {showSidePanel ? 'Hide Folders' : 'Show Folders'}
+          </button>
+          <button
+            className="toolbar-button"
+            onClick={onToggleTreemapPanel}
+            title="Toggle treemap panel"
+          >
+            {showTreemapPanel ? 'Hide Treemap' : 'Show Treemap'}
+          </button>
+          <button
+            className={`toolbar-button ${hideZeroByteFiles ? 'active' : ''}`}
+            onClick={onToggleZeroByteFiles}
+            title="Hide files with 0B size and empty folders"
+          >
+            {hideZeroByteFiles ? 'Show 0B Files' : 'Hide 0B Files'}
+          </button>
+        </div>
+
+        <div className="toolbar-section">
           <span className="toolbar-label">Sort:</span>
           <button
-            className={`icon-button ${sortCriteria === 'filename' ? 'active' : ''}`}
+            className={`toolbar-button ${sortCriteria === 'filename' ? '' : 'active'}`}
             title="Sort by Name"
             onClick={() => onSortCriteriaChange('filename')}
           >
             Name
           </button>
           <button
-            className={`icon-button ${sortCriteria === 'fileCount' ? 'active' : ''}`}
+            className={`toolbar-button ${sortCriteria === 'fileCount' ? '' : 'active'}`}
             title="Sort by Count"
             onClick={() => onSortCriteriaChange('fileCount')}
           >
             Count
           </button>
           <button
-            className={`icon-button ${sortCriteria === 'fileSize' ? 'active' : ''}`}
+            className={`toolbar-button ${sortCriteria === 'fileSize' ? '' : 'active'}`}
             title="Sort by Size"
             onClick={() => onSortCriteriaChange('fileSize')}
           >
             Size
           </button>
           <button
-            className="icon-button"
+            className="toolbar-button"
             title={`Sort Direction: ${sortDirection === 'asc' ? 'Ascending' : 'Descending'}`}
             onClick={() => onSortDirectionChange(sortDirection === 'asc' ? 'desc' : 'asc')}
           >
@@ -99,40 +105,45 @@ export const Header: React.FC<HeaderProps> = ({
           </button>
         </div>
 
-        <button
-          className="icon-button"
-          title="Toggle Folder Filter"
-          onClick={() => onToggleFolderFilter('/')}
-        >
-          🗂️
-        </button>
-        <button
-          className={`refresh-button ${hiddenRootFolders.size > 0 ? 'active' : ''}`}
-          onClick={() => onToggleFolderFilter('/')}
-          title="Toggle root folder visibility"
-        >
-          Filter Folders
-        </button>
-        <button
-          className="refresh-button"
-          onClick={onExpandAll}
-          title="Expand all folders"
-        >
-          Expand All
-        </button>
-        <button
-          className="refresh-button"
-          onClick={onCollapseAll}
-          title="Collapse all folders"
-        >
-          Collapse All
-        </button>
-        <button
-          className="refresh-button"
-          onClick={onRefresh}
-        >
-          Refresh
-        </button>
+        {rootFolders.length > 0 && (
+          <div className="toolbar-section">
+            <span className="toolbar-label">Folders:</span>
+            {rootFolders.map(folder => (
+              <button
+                key={folder}
+                className={`toolbar-button ${hiddenRootFolders.has(folder) ? 'active' : ''}`}
+                onClick={() => onToggleFolderFilter(folder)}
+                title={`${hiddenRootFolders.has(folder) ? 'Show' : 'Hide'} folder: ${folder}`}
+              >
+                {folder || 'root'}
+              </button>
+            ))}
+          </div>
+        )}
+
+        <div className="toolbar-section">
+          <button
+            className="toolbar-button"
+            onClick={onExpandAll}
+            title="Expand all folders"
+          >
+            Expand All
+          </button>
+          <button
+            className="toolbar-button"
+            onClick={onCollapseAll}
+            title="Collapse all folders"
+          >
+            Collapse All
+          </button>
+          <button
+            className="toolbar-button"
+            onClick={onRefresh}
+            title="Refresh bundle data"
+          >
+            Refresh
+          </button>
+        </div>
       </div>
     </div>
   );
