@@ -648,22 +648,47 @@ function App() {
       return colorMap[ext] || '#6c757d';
     };
 
+    // Function to collapse single-child wrapper folders
+    const collapseFolders = (folderData: FolderNode): FolderNode => {
+      // If this folder has only one child folder and no files, collapse it
+      if (folderData.children.length === 1 && folderData.files.length === 0) {
+        const child = folderData.children[0];
+        const collapsedChild = collapseFolders(child);
+        return {
+          ...collapsedChild,
+          name: folderData.name ? `${folderData.name}/${collapsedChild.name}` : collapsedChild.name,
+          path: folderData.path || collapsedChild.path
+        };
+      }
+
+      // Otherwise, recursively collapse children
+      return {
+        ...folderData,
+        children: folderData.children.map(child => collapseFolders(child))
+      };
+    };
+
     const renderFolder = (folderData: FolderNode): JSX.Element => {
       if (folderData.totalSize === 0) return <></>;
 
-      const allFiles = [...folderData.files];
-      const allFolders = folderData.children.filter(child => child.totalSize > 0);
+      const collapsed = collapseFolders(folderData);
+      const allFiles = [...collapsed.files];
+      const allFolders = collapsed.children.filter(child => child.totalSize > 0);
 
       // Sort by size for better layout
       allFiles.sort((a, b) => b.size - a.size);
       allFolders.sort((a, b) => b.totalSize - a.totalSize);
 
+      // Don't show folder wrapper if it's just the root or if it only has files and no meaningful structure
+      const showFolderHeader = collapsed.name && collapsed.name !== 'root' &&
+        (allFolders.length > 0 || (allFiles.length > 3 && collapsed.totalSize > totalSize * 0.1));
+
       return (
-        <div className="treemap-folder" key={folderData.path}>
-          {folderData.name && folderData.name !== 'root' && (
+        <div className="treemap-folder" key={collapsed.path}>
+          {showFolderHeader && (
             <div className="treemap-folder-header">
-              <span className="treemap-folder-name">{folderData.name}</span>
-              <span className="treemap-folder-size">{formatFileSize(folderData.totalSize)}</span>
+              <span className="treemap-folder-name">{collapsed.name}</span>
+              <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
             </div>
           )}
           <div className="treemap-container">
@@ -674,6 +699,10 @@ function App() {
               const maxSize = 200; // Maximum tile size in pixels
               const size = Math.max(minSize, Math.min(maxSize, Math.sqrt(sizeRatio) * 300));
 
+              // Get base color and make it lighter for better readability
+              const baseColor = getFileColor(file.name);
+              const lightColor = baseColor + '80'; // Add transparency for lighter effect
+
               return (
                 <div
                   key={file.fullPath}
@@ -681,7 +710,8 @@ function App() {
                   style={{
                     width: `${size}px`,
                     height: `${size * 0.75}px`,
-                    backgroundColor: getFileColor(file.name),
+                    backgroundColor: lightColor,
+                    border: `1px solid ${baseColor}`,
                     minWidth: `${minSize}px`,
                     minHeight: `${minSize * 0.75}px`
                   }}
