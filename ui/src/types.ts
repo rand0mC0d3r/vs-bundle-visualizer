@@ -11,6 +11,16 @@ export interface BundleData {
       metaUid?: string;
     };
   };
+  nodeMetas?: {
+    [uid: string]: {
+      id: string;
+      moduleParts?: {
+        [bundleName: string]: string;
+      };
+      imported?: Array<{ uid: string }>;
+      importedBy?: Array<{ uid: string }>;
+    };
+  };
 }
 
 export interface TreeNode {

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { BundleData } from '../types';
 import { formatFileSize, getFileExtension, getFileIcon, getNodeSize } from '../utils/fileUtils';
 import { SortCriteria, SortDirection } from './types';
@@ -15,6 +15,17 @@ interface TreeViewProps {
   onSelectNode: (nodeId: string) => void;
 }
 
+interface DependencyInfo {
+  consumers: string[];
+  dependencies: string[];
+  isVendor: boolean;
+  mainLibrary?: string;
+}
+
+interface DependencyMap {
+  [nodeName: string]: DependencyInfo;
+}
+
 export const TreeView: React.FC<TreeViewProps> = ({
   bundleData,
   expandedNodes,
@@ -26,6 +37,68 @@ export const TreeView: React.FC<TreeViewProps> = ({
   onToggleNode,
   onSelectNode
 }) => {
+
+  // Extract dependency relationships from nodeMetas
+  const dependencyMap = useMemo((): DependencyMap => {
+    const map: DependencyMap = {};
+
+    if (!bundleData.nodeMetas) return map;
+
+    // First pass: identify vendor vs asset bundles and create base entries
+    Object.entries(bundleData.nodeMetas).forEach(([, meta]: [string, any]) => {
+      const bundleName = Object.keys(meta.moduleParts || {})[0];
+      if (!bundleName) return;
+
+      const isVendor = bundleName.startsWith('vendor/');
+      const isAsset = bundleName.startsWith('assets/');
+
+      if (isVendor || isAsset) {
+        if (!map[bundleName]) {
+          map[bundleName] = {
+            consumers: [],
+            dependencies: [],
+            isVendor,
+            mainLibrary: undefined
+          };
+        }
+
+        // Extract main library name for vendor bundles
+        if (isVendor && meta.id) {
+          const libMatch = meta.id.match(/node_modules\/([^\/]+)/);
+          if (libMatch && !map[bundleName].mainLibrary) {
+            map[bundleName].mainLibrary = libMatch[1];
+          }
+        }
+      }
+    });
+
+    // Second pass: map dependencies between bundles
+    Object.entries(bundleData.nodeMetas).forEach(([, meta]: [string, any]) => {
+      const bundleName = Object.keys(meta.moduleParts || {})[0];
+      if (!bundleName) return;
+
+      const isAsset = bundleName.startsWith('assets/');
+
+      if (isAsset && meta.imported) {
+        // Asset bundle importing from vendors
+        meta.imported.forEach((imported: any) => {
+          const importedMeta = bundleData.nodeMetas?.[imported.uid];
+          if (importedMeta) {
+            const importedBundle = Object.keys(importedMeta.moduleParts || {})[0];
+            if (importedBundle && importedBundle.startsWith('vendor/')) {
+              if (!map[bundleName].dependencies.includes(importedBundle)) {
+                map[bundleName].dependencies.push(importedBundle);
+              }
+              if (!map[importedBundle].consumers.includes(bundleName)) {
+                map[importedBundle].consumers.push(bundleName);
+              }
+            }
+          }
+        });
+      }
+    });    return map;
+  }, [bundleData]);
+
   const sortNodes = (nodes: any[]): any[] => {
     return [...nodes].sort((a, b) => {
       let aValue: any, bValue: any;
@@ -95,10 +168,14 @@ export const TreeView: React.FC<TreeViewProps> = ({
     const isSelected = selectedNode === nodeId;
     const nodeSize = getNodeSize(node, bundleData);
 
+    // Check if this is a bundle file and get dependency info
+    const bundleInfo = dependencyMap[node.name];
+    const isBundle = !!bundleInfo;
+
     return (
       <div key={nodeId} className="tree-node" data-file-path={nodeId}>
         <div
-          className={`tree-item ${isSelected ? 'selected' : ''}`}
+          className={`tree-item ${isSelected ? 'selected' : ''} ${isBundle ? 'bundle-item' : ''}`}
           style={{ paddingLeft: level * 16 + 4 }}
           onClick={() => onSelectNode(nodeId)}
         >
@@ -123,6 +200,9 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
             <div className={`tree-label ${isFolder ? 'folder' : ''}`}>
               {node.name}
+              {bundleInfo?.mainLibrary && (
+                <span className="main-library"> ({bundleInfo.mainLibrary})</span>
+              )}
             </div>
 
             {nodeSize > 0 && (
@@ -131,6 +211,44 @@ export const TreeView: React.FC<TreeViewProps> = ({
               </div>
             )}
           </div>
+
+          {/* Show dependency information for bundle files */}
+          {bundleInfo && (
+            <div className="dependency-info" style={{ paddingLeft: (level + 1) * 16 + 24 }}>
+              {bundleInfo.isVendor ? (
+                // Vendor bundle - show what assets use it
+                bundleInfo.consumers.length > 0 && (
+                  <div className="dependency-section">
+                    <div className="dependency-label">📦 Used by:</div>
+                    <div className="dependency-list">
+                      {bundleInfo.consumers.map(consumer => (
+                        <span key={consumer} className="dependency-item consumer-item">
+                          {consumer.replace('assets/', '')}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )
+              ) : (
+                // Asset bundle - show what vendors it depends on
+                bundleInfo.dependencies.length > 0 && (
+                  <div className="dependency-section">
+                    <div className="dependency-label">🔗 Dependencies:</div>
+                    <div className="dependency-list">
+                      {bundleInfo.dependencies.map(dep => {
+                        const depInfo = dependencyMap[dep];
+                        return (
+                          <span key={dep} className="dependency-item dependency-item-vendor">
+                            {depInfo?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '')}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )
+              )}
+            </div>
+          )}
         </div>
 
         {hasChildren && isExpanded && (
