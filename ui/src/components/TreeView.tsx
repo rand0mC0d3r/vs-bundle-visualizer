@@ -306,11 +306,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
                 {rootNode.name || 'Root'}
               </div>
               <div className="tree-root-stats">
-                <span className="tree-root-size">
-                  {formatFileSize(totalSize)}
-                </span>
                 <span className="tree-root-count">
-                  {counts.files} files, {counts.folders} folders
+                  {formatFileSize(totalSize)} | {counts.files} files, {counts.folders} folders
                 </span>
               </div>
             </div>
