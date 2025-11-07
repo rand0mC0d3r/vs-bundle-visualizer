@@ -42,7 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
   return (
     <div className="header">
       <div className="header-title">
-        <h1>Bundle Visualizer</h1>
         {isDevelopmentMode() && (
           <span className="dev-indicator">DEV</span>
         )}
