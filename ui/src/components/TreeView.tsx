@@ -199,9 +199,11 @@ export const TreeView: React.FC<TreeViewProps> = ({
             </div>
 
             <div className={`tree-label ${isFolder ? 'folder' : ''}`}>
-              {node.name}
+              {node.name} {' '}
               {bundleInfo?.mainLibrary && (
-                <span className="main-library"> ({bundleInfo.mainLibrary})</span>
+                <span className="dependency-item dependency-item-vendor">
+                  {bundleInfo.mainLibrary}
+                </span>
               )}
             </div>
 
