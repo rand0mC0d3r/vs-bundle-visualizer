@@ -363,6 +363,18 @@
   font-style: italic;
 }
 
+.main-library.clickable {
+  cursor: pointer;
+  transition: color 0.2s ease;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+
+.main-library.clickable:hover {
+  color: var(--vscode-textLink-foreground, #4fc3f7);
+  background: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.1));
+}
+
 .dependency-info {
   margin-top: 4px;
   font-size: 0.85em;
@@ -453,6 +465,44 @@
 
 .library-filter-item:hover {
   background: var(--vscode-button-hoverBackground, #1177bb);
+}
+
+/* Empty Results */
+.empty-results {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  text-align: center;
+  color: var(--vscode-descriptionForeground, #cccccc99);
+  min-height: 200px;
+}
+
+.empty-results-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.6;
+}
+
+.empty-results-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--vscode-foreground, #cccccc);
+  margin-bottom: 8px;
+}
+
+.empty-results-message {
+  font-size: 14px;
+  margin-bottom: 12px;
+  max-width: 400px;
+  line-height: 1.4;
+}
+
+.empty-results-hint {
+  font-size: 12px;
+  font-style: italic;
+  opacity: 0.8;
 }
 
 /* Status bar */

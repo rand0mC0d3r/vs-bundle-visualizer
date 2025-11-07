@@ -237,10 +237,21 @@ export const TreeView: React.FC<TreeViewProps> = ({
             </div>
 
             <div className={`tree-label ${isFolder ? 'folder' : ''}`}>
-              {node.name} {' '}
+              {node.name}
               {bundleInfo?.mainLibrary && (
-                <span className="dependency-item dependency-item-vendor">
-                  {bundleInfo.mainLibrary}
+                <span
+                  className="main-library clickable"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (libraryFilters.includes(bundleInfo.mainLibrary!)) {
+                      onRemoveLibraryFilter(bundleInfo.mainLibrary!);
+                    } else {
+                      onAddLibraryFilter(bundleInfo.mainLibrary!);
+                    }
+                  }}
+                  title={`${libraryFilters.includes(bundleInfo.mainLibrary!) ? 'Remove' : 'Add'} filter: ${bundleInfo.mainLibrary}`}
+                >
+                  ({bundleInfo.mainLibrary})
                 </span>
               )}
             </div>
