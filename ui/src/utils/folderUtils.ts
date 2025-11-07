@@ -10,6 +10,7 @@ export const buildFolderStructure = (
   const root: FolderNode = {
     name: 'root',
     path: '',
+    originalPath: '',
     children: [],
     files: [],
     totalSize: 0
@@ -74,6 +75,7 @@ export const buildFolderStructure = (
         const newFolder: FolderNode = {
           name: folderName,
           path: newPath,
+          originalPath: newPath, // Initially, originalPath is the same as path
           children: [],
           files: [],
           totalSize: 0

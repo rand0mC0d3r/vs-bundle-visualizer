@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { BundleData } from '../types';
-import { buildDependencyMap, checkFileMatchesLibraryFilters, DependencyMap as SharedDependencyMap } from '../utils/dependencyUtils';
+import { buildDependencyMap, checkFileMatchesLibraryFilters, checkFolderMatchesLibraryFilters, DependencyMap as SharedDependencyMap } from '../utils/dependencyUtils';
 import { formatFileSize, getFileExtension, getFileIcon } from '../utils/fileUtils';
 import { FolderNode } from './types';
 
@@ -43,10 +43,39 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
     return checkFileMatchesLibraryFilters(filePath, libraryFilters, dependencyMap);
   };
 
+  // Function to check if a folder should be visible based on library filters
+  const folderMatchesLibraryFilters = (folder: FolderNode): boolean => {
+    return checkFolderMatchesLibraryFilters(folder.path, folder.originalPath, libraryFilters, dependencyMap);
+  };
+
+  // Function to check if a folder or its contents should be visible
+  const shouldShowFolder = (folder: FolderNode): boolean => {
+    // If no filters, show everything
+    if (libraryFilters.length === 0) {
+      return true;
+    }
+
+    // Check if the folder itself matches
+    if (folderMatchesLibraryFilters(folder)) {
+      return true;
+    }
+
+    // Check if any files in the folder match
+    const hasMatchingFiles = folder.files.some(file => fileMatchesLibraryFilters(file.fullPath));
+    if (hasMatchingFiles) {
+      return true;
+    }
+
+    // Check if any child folders should be shown (recursive)
+    const hasMatchingChildren = folder.children.some(child => shouldShowFolder(child));
+    return hasMatchingChildren;
+  };
+
   const buildFolderStructure = (bundleData: BundleData): FolderNode => {
     const root: FolderNode = {
       name: 'root',
       path: '',
+      originalPath: '',
       children: [],
       files: [],
       totalSize: 0
@@ -125,6 +154,7 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
           const newFolder: FolderNode = {
             name: folderName,
             path: newPath,
+            originalPath: newPath, // Initially, originalPath is the same as path
             children: [],
             files: [],
             totalSize: 0
@@ -172,7 +202,8 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
         return {
           ...onlyChild,
           name: collapsedName,
-          path: onlyChild.path // Keep the original path for expansion logic
+          path: onlyChild.path, // Keep the original path for expansion logic
+          originalPath: onlyChild.originalPath || onlyChild.path // Preserve the original path for dependency map matching
         };
       }
 
@@ -210,7 +241,11 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
   const renderFolderTree = (folder: FolderNode, level: number = 0): JSX.Element => {
     const isExpanded = expandedFolders.has(folder.path);
     const isSelected = selectedFolder === folder.path;
-    const hasChildren = folder.children.length > 0 || folder.files.length > 0;
+
+    // Check if there are any visible children or files after filtering
+    const visibleChildren = folder.children.filter(child => shouldShowFolder(child));
+    const visibleFiles = folder.files.filter(file => fileMatchesLibraryFilters(file.fullPath));
+    const hasChildren = visibleChildren.length > 0 || visibleFiles.length > 0;
 
     return (
       <div key={folder.path} className="folder-node">
@@ -267,8 +302,8 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
 
         {hasChildren && isExpanded && (
           <div className="tree-children">
-            {folder.children.map(child => renderFolderTree(child, level + 1))}
-            {folder.files.map(file => {
+            {visibleChildren.map(child => renderFolderTree(child, level + 1))}
+            {visibleFiles.map(file => {
               const bundleInfo = dependencyMap[file.fullPath];
               const isBundle = !!bundleInfo;
 

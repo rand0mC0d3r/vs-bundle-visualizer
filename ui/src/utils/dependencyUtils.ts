@@ -91,7 +91,7 @@ export const checkNodeMatchesLibraryFilters = (
   }
 
   // Construct the full path for this node
-  const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
+  const fullPath = currentPath;
 
   // Check if this node corresponds to a bundle file
   const bundleInfo = dependencyMap[fullPath];
@@ -103,12 +103,12 @@ export const checkNodeMatchesLibraryFilters = (
     }
 
     // For asset bundles, check if any of their dependencies match the filters
-    if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
-      return bundleInfo.dependencies.some(dep => {
-        const depInfo = dependencyMap[dep];
-        return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
-      });
-    }
+    // if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
+    //   return bundleInfo.dependencies.some(dep => {
+    //     const depInfo = dependencyMap[dep];
+    //     return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
+    //   });
+    // }
 
     // If it's a bundle but doesn't match any filter, hide it
     return false;
@@ -157,5 +157,44 @@ export const checkFileMatchesLibraryFilters = (
   }
 
   // For non-bundle files, show them if they are part of matching bundles
+  return true;
+};
+
+export const checkFolderMatchesLibraryFilters = (
+  folderPath: string,
+  originalFolderPath: string | undefined,
+  libraryFilters: string[],
+  dependencyMap: DependencyMap
+): boolean => {
+  // No filters means show everything
+  if (libraryFilters.length === 0) {
+    return true;
+  }
+
+  // Use originalPath if available, fallback to folderPath
+  const pathToCheck = originalFolderPath || folderPath;
+
+  // Check if this folder path corresponds to a bundle file
+  const bundleInfo = dependencyMap[pathToCheck];
+
+  if (bundleInfo) {
+    // For vendor bundles, check if the main library matches any filter
+    if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
+      return libraryFilters.includes(bundleInfo.mainLibrary);
+    }
+
+    // For asset bundles, check if any of their dependencies match the filters
+    if (!bundleInfo.isVendor && bundleInfo.dependencies.length > 0) {
+      return bundleInfo.dependencies.some(dep => {
+        const depInfo = dependencyMap[dep];
+        return depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
+      });
+    }
+
+    // If it's a bundle but doesn't match any filter, hide it
+    return false;
+  }
+
+  // For non-bundle folders, show them (they might contain matching files)
   return true;
 };

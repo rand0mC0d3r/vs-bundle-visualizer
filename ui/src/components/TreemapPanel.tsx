@@ -22,6 +22,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
     const root: FolderNode = {
       name: 'root',
       path: '',
+      originalPath: '',
       children: [],
       files: [],
       totalSize: 0
@@ -99,6 +100,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
           const newFolder: FolderNode = {
             name: folderName,
             path: newPath,
+            originalPath: newPath, // Initially, originalPath is the same as path
             children: [],
             files: [],
             totalSize: 0
@@ -164,7 +166,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         return {
           ...collapsedChild,
           name: folderData.name ? `${folderData.name}/${collapsedChild.name}` : collapsedChild.name,
-          path: folderData.path || collapsedChild.path
+          path: folderData.path || collapsedChild.path,
+          originalPath: collapsedChild.originalPath || collapsedChild.path // Preserve the original path for dependency map matching
         };
       }
 
