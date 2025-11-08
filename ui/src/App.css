@@ -664,6 +664,7 @@
 
 .treemap-folder-header {
   display: flex;
+  gap: 4px;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 6px;
@@ -680,6 +681,10 @@
   color: var(--vscode-panelTitle-activeForeground);
   font-size: 11px;
   opacity: 0.9;
+  width: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .treemap-folder-size {
