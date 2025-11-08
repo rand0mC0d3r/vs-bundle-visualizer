@@ -8,7 +8,7 @@ import { TreeView } from './components/TreeView';
 import { FolderNode, SortCriteria, SortDirection } from './components/types';
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts';
 import { useVSCodeApi } from './hooks/useVSCodeApi';
-import { buildFolderStructure, getRootFolders } from './utils/folderUtils';
+import { getRootFolders } from './utils/folderUtils';
 
 function App() {
   const { bundleData, theme, error, vscodeApi } = useVSCodeApi();
@@ -87,16 +87,16 @@ function App() {
       return paths;
     };
 
-    if (bundleData) {
-      const folderStructure = buildFolderStructure(bundleData, hideZeroByteFiles, hiddenRootFolders);
-      const allFolderPaths = new Set(getAllFolderPaths(folderStructure));
-      setExpandedFolders(allFolderPaths);
-    }
+    // if (bundleData) {
+    //   const folderStructure = buildFolderStructure(bundleData, hideZeroByteFiles, hiddenRootFolders);
+    //   const allFolderPaths = new Set(getAllFolderPaths(folderStructure));
+    //   setExpandedFolders(allFolderPaths);
+    // }
   };
 
   const collapseAll = () => {
     setExpandedNodes(new Set());
-    setExpandedFolders(new Set());
+    // setExpandedFolders(new Set());
   };
 
   const addLibraryFilter = (library: string) => {
