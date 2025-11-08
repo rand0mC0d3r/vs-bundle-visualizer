@@ -223,13 +223,13 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
           {isLast ? 'last' : null}
           {isPrelast ? 'prelast' : null}
           <div style={{
-              display: isLast ? "grid" : "flex",
+              display: (isLast || isPrelast) ? "grid" : "flex",
               // display:  "flex",
               flexWrap: "wrap",
               gap: "4px",
               alignItems: "flex-start",
-              gridTemplateColumns: isLast ? "repeat(auto-fit, 1fr)" : "none",
-              gridAutoRows: isLast ? "minmax(15px, auto)" : "none"
+              gridTemplateColumns: (isLast || isPrelast) ? "repeat(auto-fill, 1fr)" : "none",
+              gridAutoRows: (isLast || isPrelast) ? "minmax(15px, auto)" : "none"
           }}>
             {allFolders.map((subfolder) => {
               // Calculate sibling position info based on which folders will actually show headers
