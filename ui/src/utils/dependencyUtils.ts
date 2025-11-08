@@ -100,11 +100,7 @@ export const checkNodeMatchesLibraryFilters = (
     return true;
   }
 
-
-  // Check if this node corresponds to a bundle file
   const bundleInfo = dependencyMap[currentPath] || dependencyMap[node.name];
-
-  // console.log('Checking node:', node, nodeName, currentPath, dependencyMap, dependencyMap[currentPath], dependencyMap[node.name]);
 
   if (bundleInfo) {
     // For vendor bundles, check if the main library matches any filter
@@ -121,7 +117,6 @@ export const checkNodeMatchesLibraryFilters = (
           }
         }
       }
-      // console.log('Checking vendor bundle:', currentPath, 'with main library:', bundleInfo.mainLibrary, 'and libraries:', bundleInfo.mainLibraries, 'against filters:', libraryFilters, result);
       return result;
     }
 

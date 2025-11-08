@@ -37,7 +37,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
   onRemoveLibraryFilter
 }) => {
 
-  console.log('Rendering TreeView with bundleData:', bundleData);
+  // console.log('Rendering TreeView with bundleData:', bundleData);
 
   // Extract dependency relationships from nodeMetas
   const dependencyMap = useMemo((): SharedDependencyMap => {
@@ -225,6 +225,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return <div className="tree-container">No data available</div>;
   }
 
+  console.clear()
   const filesToRender = sortNodes(bundleData.tree.children
         .filter(rootNode => {
           // Check if any file in this root node belongs to a visible folder and matches filters
@@ -234,11 +235,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
               const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
               const firstSlash = fullPath.indexOf('/');
               const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
-              const isVisible = isRootFolderVisible(topLevelFolder);
 
-              // Also check if it matches library filters
-              return isVisible && nodeMatchesFilters(node, currentPath);
-              // return isVisible
+              return isRootFolderVisible(topLevelFolder) && nodeMatchesFilters(node, currentPath);
             }
 
             if (node.children) {
