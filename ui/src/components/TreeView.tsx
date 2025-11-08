@@ -178,7 +178,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
             </div>
             <div className="tree-root-stats">
               <span className="tree-root-count">
-                {files.length} file{files.length !== 1 ? 's' : ''}
+                {files.length} file{files.length !== 1 ? 's' : ''} | {Math.round(files.reduce((acc: number, file: any) => acc + file.totalSize, 0) / 1000) / 1} KB
               </span>
             </div>
           </div>
