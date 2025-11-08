@@ -234,50 +234,52 @@ export const TreeView: React.FC<TreeViewProps> = ({
         </div>
       )}
 
-      {sortNodes(bundleData.tree.children.filter(rootNode => {
-        // Check if any file in this root node belongs to a visible folder and matches filters
-        const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
-          if (node.name && !node.children) {
-            // This is a file - check if its top-level folder is visible
-            const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
-            const firstSlash = fullPath.indexOf('/');
-            const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
-            const isVisible = isRootFolderVisible(topLevelFolder);
+      {sortNodes(bundleData.tree.children
+        .filter(rootNode => {
+          // Check if any file in this root node belongs to a visible folder and matches filters
+          const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
+            if (node.name && !node.children) {
+              // This is a file - check if its top-level folder is visible
+              const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
+              const firstSlash = fullPath.indexOf('/');
+              const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
+              const isVisible = isRootFolderVisible(topLevelFolder);
 
-            // Also check if it matches library filters
-            return isVisible && nodeMatchesFilters(node, currentPath);
-          }
+              // Also check if it matches library filters
+              return isVisible && nodeMatchesFilters(node, currentPath);
+            }
 
-          if (node.children) {
-            return node.children.some((child: any) =>
-              hasVisibleFiles(child, currentPath ? `${currentPath}/${node.name}` : node.name)
-            );
-          }
+            if (node.children) {
+              return node.children.some((child: any) =>
+                hasVisibleFiles(child, currentPath ? `${currentPath}/${node.name}` : node.name)
+              );
+            }
 
-          return false;
-        };
+            return false;
+          };
 
-        return hasVisibleFiles(rootNode);
-      })).map((rootNode: any) => {
-        const totalSize = getNodeSize(rootNode, bundleData);
-        const counts = countFiles(rootNode);
-
-        return (
-          <div key={rootNode.name || rootNode.id} className="tree-root">
-            <div className="tree-root-header">
-              <div className="tree-root-title">
-                {rootNode.name || 'Root'}
-              </div>
-              <div className="tree-root-stats">
-                <span className="tree-root-count">
-                  {formatFileSize(totalSize)} | {counts.files} files, {counts.folders} folders
-                </span>
-              </div>
+          return hasVisibleFiles(rootNode);
+        }))
+        .map((rootNode: any) => ({
+          ...rootNode,
+          folder: rootNode.name.split('/')[0] + '/',
+          totalSize: getNodeSize(rootNode, bundleData),
+          counts: countFiles(rootNode)
+        }))
+        .map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
+          <div className="tree-root-header">
+            {JSON.stringify(rootNode)}
+            <div className="tree-root-title">
+              {rootNode.name || 'Root'}
             </div>
-            {renderTreeNode(rootNode)}
+            <div className="tree-root-stats">
+              <span className="tree-root-count">
+                {formatFileSize(rootNode.totalSize)} | {rootNode.counts.files} files, {rootNode.counts.folders} folders
+              </span>
+            </div>
           </div>
-        );
-      })}
+          {renderTreeNode(rootNode)}
+        </div>)}
     </div>
   );
 };
