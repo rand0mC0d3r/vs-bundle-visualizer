@@ -6,16 +6,18 @@ interface TreeViewBundleMainLibraries {
   libraryFilters: string[];
   onAddLibraryFilter: (library: string) => void;
   onRemoveLibraryFilter: (library: string) => void;
+  uniqueAssetDependencies: string[]
 }
 
 export const TreeViewBundleMainLibraries: React.FC<TreeViewBundleMainLibraries> = ({
   bundleInfo,
   libraryFilters,
   onAddLibraryFilter,
-  onRemoveLibraryFilter
+  onRemoveLibraryFilter,
+  uniqueAssetDependencies = []
 }) => {
     return (
-      <>
+      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
         {bundleInfo?.mainLibrary && (
           <span
             className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
@@ -34,12 +36,14 @@ export const TreeViewBundleMainLibraries: React.FC<TreeViewBundleMainLibraries> 
         )}
 
         {bundleInfo?.mainLibraries && bundleInfo?.mainLibraries
+          .filter((lib) => uniqueAssetDependencies.includes(lib))
           .map((lib) => lib !== bundleInfo.mainLibrary)
           .filter(Boolean).length > 0 && (
           <span className="additional-libraries" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
             {' '}
             [+
             {bundleInfo.mainLibraries
+              // .filter((lib) => uniqueAssetDependencies.includes(lib))
               .filter((lib) => lib !== bundleInfo.mainLibrary)
               .map((lib) => (
                 <span
@@ -62,6 +66,6 @@ export const TreeViewBundleMainLibraries: React.FC<TreeViewBundleMainLibraries> 
             ]
           </span>
         )}
-      </>
+      </div>
     );
 };

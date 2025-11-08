@@ -110,23 +110,17 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return !hiddenRootFolders.has(rootFolderName);
   };
 
-  const uniqueAssetDependencies = Object.entries(dependencyMap)
-    .filter(([, info]) => !info.isVendor && info.dependencies.length > 0)
-    .filter(([mainLibrary, ]) => mainLibrary)
-    .map(([name, info]) => ({ ...info.dependencies}))
-    .reduce((acc, deps) => {
-      Object.entries(deps).forEach(([key, value]) => {
-        acc.push(value);
-      });
-      return acc;
-    }, [])
-    .map(dep => ({ libraryName:  dependencyMap[dep]?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '').split('-')[0]}))
-    .reduce((acc: any[], curr) => {
-      if (!acc.find(item => item === curr.libraryName)) {
-        acc.push(curr.libraryName);
-      }
-      return acc;
-    }, []);
+  const uniqueAssetDependencies = [
+    ...new Set(
+      Object.values(dependencyMap)
+        .filter(info => !info.isVendor && info.dependencies.length)
+        .flatMap(info => info.dependencies)
+        .map(dep =>
+          dependencyMap[dep]?.mainLibrary ||
+          dep.replace(/^vendor\/vendor__/, '').replace(/\.js$/, '').split('-')[0]
+        )
+    ),
+  ];
 
   console.log('Unique asset dependencies:', uniqueAssetDependencies);
 
@@ -170,13 +164,14 @@ export const TreeView: React.FC<TreeViewProps> = ({
               {getFileIcon(node.name, isFolder)}
             </div>
 
-            <div className={`tree-label ${isFolder ? 'folder' : ''}`} style={{ flexWrap: 'wrap' }}>
+            <div className={`tree-label ${isFolder ? 'folder' : ''}`} style={{ display: 'flex', flexDirection: 'column', flexWrap: 'wrap' }}>
               {node.name}
               <TreeViewBundleMainLibraries
                 bundleInfo={bundleInfo}
                 libraryFilters={libraryFilters}
                 onAddLibraryFilter={onAddLibraryFilter}
                 onRemoveLibraryFilter={onRemoveLibraryFilter}
+                uniqueAssetDependencies={uniqueAssetDependencies}
               />
             </div>
 
