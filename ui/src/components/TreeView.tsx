@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { BundleData } from '../types';
 import { buildDependencyMap, checkNodeMatchesLibraryFilters, DependencyMap as SharedDependencyMap } from '../utils/dependencyUtils';
 import { formatFileSize, getFileExtension, getFileIcon, getNodeSize } from '../utils/fileUtils';
+import { TreeViewBundleMainLibraries } from './TreeView/TreeViewBundleMainLibraries';
 import { SortCriteria, SortDirection } from './types';
 
 interface TreeViewProps {
@@ -150,54 +151,12 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
             <div className={`tree-label ${isFolder ? 'folder' : ''}`} style={{ flexWrap: 'wrap' }}>
               {node.name}
-              {bundleInfo?.mainLibrary && (
-                <span
-                  className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (libraryFilters.includes(bundleInfo.mainLibrary!)) {
-                      onRemoveLibraryFilter(bundleInfo.mainLibrary!);
-                    } else {
-                      onAddLibraryFilter(bundleInfo.mainLibrary!);
-                    }
-                  }}
-                  title={`${libraryFilters.includes(bundleInfo.mainLibrary!) ? 'Remove' : 'Add'} filter: ${bundleInfo.mainLibrary}`}
-                >
-                  {bundleInfo.mainLibrary}
-                </span>
-              )}
-
-              {bundleInfo?.mainLibraries && bundleInfo?.mainLibraries
-                .map((lib) => lib !== bundleInfo.mainLibrary)
-                .filter(Boolean).length > 0 && (
-                <span className="additional-libraries" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
-                  {' '}
-                  [+
-                  {bundleInfo.mainLibraries
-                    .filter((lib) => lib !== bundleInfo.mainLibrary)
-                    .map((lib) => (
-                      <span
-                        key={lib}
-                        className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(lib) ? 'active' : ''}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (libraryFilters.includes(lib)) {
-                            onRemoveLibraryFilter(lib);
-                          } else {
-                            onAddLibraryFilter(lib);
-                          }
-                        }}
-                        title={`${libraryFilters.includes(lib) ? 'Remove' : 'Add'} filter: ${lib}`}
-                      >
-                        {lib}
-                      </span>
-                    ))
-                    .reduce((prev, curr) => [prev, ', ', curr])}
-                  ]
-                </span>
-              )}
-
-
+              <TreeViewBundleMainLibraries
+                bundleInfo={bundleInfo}
+                libraryFilters={libraryFilters}
+                onAddLibraryFilter={onAddLibraryFilter}
+                onRemoveLibraryFilter={onRemoveLibraryFilter}
+              />
             </div>
 
             {nodeSize > 0 && (
