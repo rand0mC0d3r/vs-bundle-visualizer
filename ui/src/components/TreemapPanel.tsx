@@ -178,7 +178,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       };
     };
 
-    const renderFolder = (folderData: FolderNode, depth: number = 0): JSX.Element => {
+    const renderFolder = (folderData: FolderNode, depth: number = 0, siblingInfo?: { isLast: boolean; isPrelast: boolean }): JSX.Element => {
       if (folderData.totalSize === 0) {
         return <></>;
       }
@@ -197,8 +197,20 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       const showFolderHeader = collapsed.name && collapsed.name !== 'root' &&
         (allFolders.length > 0 || (allFiles.length > 3 && collapsed.totalSize > totalSize * 0.1));
 
+      // Calculate which folders will show headers to determine last/prelast positions
+      const foldersWithHeaders = allFolders.map(child => {
+        const childCollapsed = collapseFolders(child);
+        return {
+          folder: child,
+          willShowHeader: childCollapsed.name && childCollapsed.name !== 'root' &&
+            (childCollapsed.children.filter(c => c.totalSize > 0).length > 0 ||
+             (childCollapsed.files.filter(f => !hideZeroByteFiles || f.size > 0).length > 3 &&
+              childCollapsed.totalSize > totalSize * 0.1))
+        };
+      }).filter(item => item.willShowHeader);
+
       const isLast = !showFolderHeader
-      const isPrelast = showFolderHeader //help me dynamically ;
+      const isPrelast = siblingInfo?.isLast ?? false;
 
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
@@ -219,7 +231,16 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
               gridTemplateColumns: isLast ? "repeat(auto-fit, 1fr)" : "none",
               gridAutoRows: isLast ? "minmax(15px, auto)" : "none"
           }}>
-            {allFolders.map(subfolder => renderFolder(subfolder, depth + 1))}
+            {allFolders.map((subfolder) => {
+              // Calculate sibling position info based on which folders will actually show headers
+              const siblingFolderIndex = foldersWithHeaders.findIndex(item => item.folder === subfolder);
+              const siblingInfo = siblingFolderIndex >= 0 ? {
+                isLast: siblingFolderIndex === foldersWithHeaders.length - 1,
+                isPrelast: siblingFolderIndex === foldersWithHeaders.length - 2
+              } : { isLast: false, isPrelast: false };
+
+              return renderFolder(subfolder, depth + 1, siblingInfo);
+            })}
             {allFiles.map(file => {
               const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
               const minSize = 20; // Minimum tile size in pixels
