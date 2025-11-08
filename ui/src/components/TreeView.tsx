@@ -46,7 +46,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
 
   // Function to check if a node matches the current filters
   const nodeMatchesFilters = (node: any, currentPath: string = ''): boolean => {
-    return checkNodeMatchesLibraryFilters(node, currentPath, libraryFilters, dependencyMap);
+    return checkNodeMatchesLibraryFilters(node, currentPath,libraryFilters, dependencyMap);
   };
 
   const sortNodes = (nodes: any[]): any[] => {
@@ -237,13 +237,13 @@ export const TreeView: React.FC<TreeViewProps> = ({
               const isVisible = isRootFolderVisible(topLevelFolder);
 
               // Also check if it matches library filters
-              // return isVisible && nodeMatchesFilters(node, currentPath);
-              return isVisible
+              return isVisible && nodeMatchesFilters(node, currentPath);
+              // return isVisible
             }
 
             if (node.children) {
               return node.children.some((child: any) =>
-                hasVisibleFiles(child, currentPath ? `${currentPath}/${node.name}` : node.name)
+                hasVisibleFiles(child, node.name)
               );
             }
 

@@ -100,16 +100,29 @@ export const checkNodeMatchesLibraryFilters = (
     return true;
   }
 
-  // Construct the full path for this node
-  const fullPath = currentPath;
 
   // Check if this node corresponds to a bundle file
-  const bundleInfo = dependencyMap[fullPath];
+  const bundleInfo = dependencyMap[currentPath] || dependencyMap[node.name];
+
+  // console.log('Checking node:', node, nodeName, currentPath, dependencyMap, dependencyMap[currentPath], dependencyMap[node.name]);
 
   if (bundleInfo) {
     // For vendor bundles, check if the main library matches any filter
-    if (bundleInfo.isVendor && bundleInfo.mainLibrary) {
-      return libraryFilters.includes(bundleInfo.mainLibrary);
+    if (bundleInfo.isVendor) {
+
+      let result = false;
+      if (bundleInfo.mainLibrary && libraryFilters.includes(bundleInfo.mainLibrary)) {
+        result = true;
+      } else if (bundleInfo.mainLibraries) {
+        for (const lib of bundleInfo.mainLibraries) {
+          if (libraryFilters.includes(lib)) {
+            result = true;
+            break;
+          }
+        }
+      }
+      // console.log('Checking vendor bundle:', currentPath, 'with main library:', bundleInfo.mainLibrary, 'and libraries:', bundleInfo.mainLibraries, 'against filters:', libraryFilters, result);
+      return result;
     }
 
     // For asset bundles, check if any of their dependencies match the filters
@@ -127,7 +140,7 @@ export const checkNodeMatchesLibraryFilters = (
   // For non-bundle nodes (folders, internal files), check if they contain matching children
   if (node.children && node.children.length > 0) {
     return node.children.some((child: any) =>
-      checkNodeMatchesLibraryFilters(child, fullPath, libraryFilters, dependencyMap)
+      checkNodeMatchesLibraryFilters(child, currentPath, libraryFilters, dependencyMap)
     );
   }
 
