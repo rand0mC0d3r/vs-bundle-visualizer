@@ -280,7 +280,7 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
                   // Split the collapsed path to show the last part normally and the rest dimmed
                   const pathParts = displayName.split('/');
                   const lastPart = pathParts.pop();
-                  const collapsedPath = pathParts.join('/');
+                  const collapsedPath = pathParts[0];
 
                   return (
                     <>
