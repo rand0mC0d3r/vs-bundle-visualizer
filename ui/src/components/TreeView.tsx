@@ -110,6 +110,26 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return !hiddenRootFolders.has(rootFolderName);
   };
 
+  const uniqueAssetDependencies = Object.entries(dependencyMap)
+    .filter(([, info]) => !info.isVendor && info.dependencies.length > 0)
+    .filter(([mainLibrary, ]) => mainLibrary)
+    .map(([name, info]) => ({ ...info.dependencies}))
+    .reduce((acc, deps) => {
+      Object.entries(deps).forEach(([key, value]) => {
+        acc.push(value);
+      });
+      return acc;
+    }, [])
+    .map(dep => ({ libraryName:  dependencyMap[dep]?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '').split('-')[0]}))
+    .reduce((acc: any[], curr) => {
+      if (!acc.find(item => item === curr.libraryName)) {
+        acc.push(curr.libraryName);
+      }
+      return acc;
+    }, []);
+
+  console.log('Unique asset dependencies:', uniqueAssetDependencies);
+
   const renderTreeNode = (node: any, path: string = '', level: number = 0): JSX.Element => {
     const hasChildren = node.children && node.children.length > 0;
     const isFolder = hasChildren;
@@ -123,7 +143,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
     const bundleInfo = dependencyMap[fullPath];
     const isBundle = !!bundleInfo;
 
-    console.log('Rendering node:', nodeId, 'isFolder:', isFolder, 'isBundle:', isBundle, 'bundleInfo:', bundleInfo);
 
     return (
       <div key={nodeId} className="tree-node" data-file-path={nodeId}>

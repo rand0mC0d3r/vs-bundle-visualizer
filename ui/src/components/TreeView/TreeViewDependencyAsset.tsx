@@ -19,6 +19,7 @@ export const TreeViewDependencyAsset: React.FC<TreeViewDependencyAssetProps> = (
 
     return (
       <>
+      {JSON.stringify(bundleInfo.dependencies)}
         {bundleInfo.dependencies.length > 0 && (
           <div className="dependency-section">
             <div className="dependency-list">
