@@ -166,17 +166,11 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
                 uniqueAssetDependencies={uniqueAssetDependencies}
               />
             </div>
-
-            {nodeSize > 0 && (
-              <div className="tree-size">
-                {formatFileSize(nodeSize)}
-              </div>
-            )}
           </div>
 
           {/* Show dependency information for bundle files */}
           {bundleInfo && (
-            <div className="dependency-info" style={{ paddingLeft: (level + 1) * 16 + 24 }}>
+            <div className="dependency-info" >
               {bundleInfo.isVendor
                 ? <TreeViewDependencyVendor {...{ bundleInfo }} />
                 : <TreeViewDependencyAsset
@@ -188,6 +182,12 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
                   />}
             </div>
           )}
+
+            {nodeSize > 0 && (
+              <div className="tree-size">
+                {formatFileSize(nodeSize)}
+              </div>
+            )}
         </div>
 
         {hasChildren && isExpanded && (

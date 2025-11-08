@@ -151,7 +151,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
   }, {});
 
   return <>
-    {filesToRender.length > 0 && <div className="tree-container" style={{ padding: '8px' }}>
+    {filesToRender.length > 0 && <div className="tree-container">
       {filesToRender.length}
       {libraryFilters.length > 0 && (
         <div className="library-filters-header">
@@ -182,27 +182,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
               </span>
             </div>
           </div>
-          {/* {files.map((rootNode: any) => renderTreeNode(rootNode))} */}
           {files.map((rootNode: any) => <TreeViewRenderNode key={rootNode.name || rootNode.id} rootNode={rootNode} bundleData={bundleData} expandedNodes={expandedNodes} selectedNode={selectedNode} sortCriteria={sortCriteria} sortDirection={sortDirection} hideZeroByteFiles={hideZeroByteFiles} libraryFilters={libraryFilters} onToggleNode={onToggleNode} onSelectNode={onSelectNode} onAddLibraryFilter={onAddLibraryFilter} onRemoveLibraryFilter={onRemoveLibraryFilter} />)}
         </div>)}
-
-
-
-
-      {/* {filesToRender.map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
-          <div className="tree-root-header">
-            <div className="tree-root-title">
-              {rootNode.folder || 'Root'} / {rootNode.fileName || ''}
-            </div>
-            <div className="tree-root-stats">
-              <span className="tree-root-count">
-                {formatFileSize(rootNode.totalSize)} | {rootNode.counts.files} files, {rootNode.counts.folders} folders
-              </span>
-            </div>
-          </div>
-          {renderTreeNode(rootNode)}
-        </div>
-      )} */}
     </div>}
 
      {filesToRender.length === 0 && (
