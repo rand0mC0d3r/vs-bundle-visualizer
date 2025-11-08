@@ -185,6 +185,8 @@ function App() {
   return (
     <div className={`app theme-${theme.kind === 1 ? 'light' : 'dark'}`}>
       <Header
+        bundleData={bundleData}
+        libraryFilters={libraryFilters}
         showSidePanel={showSidePanel}
         showTreemapPanel={showTreemapPanel}
         hideZeroByteFiles={hideZeroByteFiles}

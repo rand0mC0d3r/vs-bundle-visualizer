@@ -1,9 +1,13 @@
 import React from 'react';
+import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { isDevelopmentMode } from '../mockApi';
+import { BundleData } from '../types';
 import { SortCriteria, SortDirection } from './types';
 
 interface HeaderProps {
+  bundleData?: BundleData | null;
   showSidePanel: boolean;
+  libraryFilters: string[];
   showTreemapPanel: boolean;
   hideZeroByteFiles: boolean;
   sortCriteria: SortCriteria;
@@ -22,7 +26,9 @@ interface HeaderProps {
 }
 
 export const Header: React.FC<HeaderProps> = ({
+  bundleData,
   showSidePanel,
+  libraryFilters,
   showTreemapPanel,
   hideZeroByteFiles,
   sortCriteria,
@@ -39,6 +45,7 @@ export const Header: React.FC<HeaderProps> = ({
   onCollapseAll,
   onRefresh,
 }) => {
+    const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders, sortCriteria, sortDirection, libraryFilters);
   return (
     <div className="header">
       <div className="header-title">
@@ -48,6 +55,11 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       <div className="toolbar">
+        <div className="toolbar-section">
+          <span className="toolbar-label">Files:</span>
+          <span className="toolbar-value">{filesToRender.length}</span>
+        </div>
+
         <div className="toolbar-section">
           <button
             className="toolbar-button"

@@ -127,6 +127,13 @@
   font-weight: 500;
 }
 
+.toolbar-value {
+  font-size: 11px;
+  color: var(--vscode-foreground);
+  margin-right: 4px;
+  font-weight: bold;
+}
+
 .content {
   flex: 1;
   overflow: hidden;
