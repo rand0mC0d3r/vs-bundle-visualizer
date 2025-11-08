@@ -209,27 +209,19 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         };
       }).filter(item => item.willShowHeader);
 
-      const isLast = !showFolderHeader
-      const isPrelast = siblingInfo?.isLast ?? false;
-
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
-          {/* {showFolderHeader && ( */}
+          {showFolderHeader && (
             <div className="treemap-folder-header">
               <span className="treemap-folder-name">[{depth}] {collapsed.name}</span>
               <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
             </div>
-          {/* )} */}
-          {isLast ? 'last' : null}
-          {isPrelast ? 'prelast' : null}
+          )}
           <div style={{
-              display: ( isPrelast) ? "grid" : "flex",
-              // display:  "flex",
+              display:  "flex",
               flexWrap: "wrap",
               gap: "4px",
               alignItems: "flex-start",
-              gridTemplateColumns: ( isPrelast) ? "repeat(auto-fill, 1fr)" : "none",
-              gridAutoRows: ( isPrelast) ? "minmax(15px, auto)" : "none"
           }}>
             {allFolders.map((subfolder) => {
               // Calculate sibling position info based on which folders will actually show headers
@@ -245,7 +237,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
               const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
               const minSize = 20; // Minimum tile size in pixels
               const maxSize = 200; // Maximum tile size in pixels
-              const size = Math.max(minSize, Math.min(maxSize, Math.sqrt(sizeRatio) * 300));
+              const size = Math.max(minSize, Math.min(maxSize, Math.sqrt(sizeRatio) * 1000));
 
               // Get base color and make it lighter for better readability
               const baseColor = getFileColor(file.name);
@@ -256,8 +248,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   key={file.fullPath}
                   className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''}`}
                   style={{
-                    width: `${size*2}px`,
-                    height: `${size * 1.75}px`,
+                    width: `${size * 1.25}px`,
+                    height: `${size * 1.25}px`,
                     backgroundColor: lightColor,
                     display: 'flex',
                     flexDirection: 'column',

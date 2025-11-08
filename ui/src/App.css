@@ -656,43 +656,11 @@
 }
 
 .treemap-folder {
-  margin-bottom: 8px;
   border: 1px solid var(--vscode-panel-border);
   border-radius: 3px;
-  padding: 6px;
+  padding: 4px;
   background-color: rgba(var(--vscode-editor-background), 0.3);
 }
-
-.treemap-folder_0 {
-  padding: 16px;
-}
-
-.treemap-folder_1 {
-
-  padding: 14px;
-}
-
-.treemap-folder_2 {
-  border: 1px solid var(--vscode-panel-border);
-  padding: 12px;
-}
-
-.treemap-folder_3 {
-  padding: 10px;
-}
-
-.treemap-folder_4 {
-  padding: 10px;
-}
-
-.treemap-folder {
-  margin-bottom: 8px;
-  border: 1px solid var(--vscode-panel-border);
-  border-radius: 3px;
-  padding: 6px;
-  background-color: rgba(var(--vscode-editor-background), 0.3);
-}
-
 
 .treemap-folder-header {
   display: flex;
