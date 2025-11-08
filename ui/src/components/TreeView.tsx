@@ -37,8 +37,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
   onRemoveLibraryFilter
 }) => {
 
-  // console.log('Rendering TreeView with bundleData:', bundleData);
-
   // Extract dependency relationships from nodeMetas
   const dependencyMap = useMemo((): SharedDependencyMap => {
     return buildDependencyMap(bundleData);
@@ -225,7 +223,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return <div className="tree-container">No data available</div>;
   }
 
-  // console.clear()
   const filesToRender = sortNodes(bundleData.tree.children)
     .map((rootNode: any) => ({
       ...rootNode,
@@ -237,25 +234,25 @@ export const TreeView: React.FC<TreeViewProps> = ({
     }))
     .filter(rootNode => isRootFolderVisible(rootNode.folder))
     .filter(rootNode => {
+      if(libraryFilters.length === 0) {
+        return true
+      }
+
       const bundleInfo = dependencyMap[rootNode.name];
 
-      if (bundleInfo && libraryFilters.length > 0) {
+      if (bundleInfo) {
         if(bundleInfo.isVendor) {
           return libraryFilters.some(lf => bundleInfo.mainLibraries?.some(ml => ml === lf))
         } else {
-          console.log(',,', bundleInfo)
           const parsedDependencies = bundleInfo.dependencies.map(dep =>
             dependencyMap[dep]?.mainLibrary ||
             dep.replace(/^vendor\/vendor__/, '').replace(/\.js$/, '').split('-')[0]
           )
           return libraryFilters.some(lf => parsedDependencies.some(pd => pd === lf))
         }
-
-
-
       }
 
-      return true
+      return false
     });
 
 
@@ -284,8 +281,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
         return <div key={rootNode.name || rootNode.id} className="tree-root">
           <div className="tree-root-header">
             <div className="tree-root-title">
-              {/* {JSON.stringify(rootNode)} */}
-
               {rootNode.folder || 'Root'} / {rootNode.fileName || ''}
             </div>
             <div className="tree-root-stats">
