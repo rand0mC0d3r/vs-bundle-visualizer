@@ -200,11 +200,6 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
                 shouldShow = childSize > 0;
               }
 
-              // Apply library filtering
-              if (shouldShow) {
-                shouldShow = nodeMatchesFilters(child, nodeId);
-              }
-
               return shouldShow;
             })).map((child: any) =>
               renderTreeNode(child, nodeId, level + 1)

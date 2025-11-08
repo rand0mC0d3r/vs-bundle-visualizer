@@ -273,8 +273,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   key={file.fullPath}
                   className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''}`}
                   style={{
-                    width: `${size * 1.25}px`,
-                    height: `${size * 1.25}px`,
+                    width: `${size * 1.125}px`,
+                    height: `${size * 1.125}px`,
                     backgroundColor: lightColor,
                     display: 'flex',
                     flexDirection: 'column',
