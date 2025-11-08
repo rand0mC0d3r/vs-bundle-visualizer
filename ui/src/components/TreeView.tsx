@@ -122,8 +122,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
     ),
   ];
 
-  console.log('Unique asset dependencies:', uniqueAssetDependencies);
-
   const renderTreeNode = (node: any, path: string = '', level: number = 0): JSX.Element => {
     const hasChildren = node.children && node.children.length > 0;
     const isFolder = hasChildren;
@@ -227,28 +225,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return <div className="tree-container">No data available</div>;
   }
 
-  return (
-    <div className="tree-container">
-      {/* Library Filters Header */}
-      {libraryFilters.length > 0 && (
-        <div className="library-filters-header">
-          <div className="library-filters-label">Filtering by libraries:</div>
-          <div className="library-filters-list">
-            {libraryFilters.map(filter => (
-              <span
-                key={filter}
-                className="library-filter-item"
-                onClick={() => onRemoveLibraryFilter(filter)}
-                title={`Remove filter: ${filter}`}
-              >
-                {filter} ×
-              </span>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {sortNodes(bundleData.tree.children
+  const filesToRender = sortNodes(bundleData.tree.children
         .filter(rootNode => {
           // Check if any file in this root node belongs to a visible folder and matches filters
           const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
@@ -283,7 +260,28 @@ export const TreeView: React.FC<TreeViewProps> = ({
           totalSize: getNodeSize(rootNode, bundleData),
           counts: countFiles(rootNode)
         }))
-        .map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
+
+  return <>
+    {filesToRender.length > 0 && <div className="tree-container" style={{ padding: '8px' }}>
+      {libraryFilters.length > 0 && (
+        <div className="library-filters-header">
+          <div className="library-filters-label">Filtering by libraries:</div>
+          <div className="library-filters-list">
+            {libraryFilters.map(filter => (
+              <span
+                key={filter}
+                className="library-filter-item"
+                onClick={() => onRemoveLibraryFilter(filter)}
+                title={`Remove filter: ${filter}`}
+              >
+                {filter} ×
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {filesToRender.map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
           <div className="tree-root-header">
             <div className="tree-root-title">
               {rootNode.folder || 'Root'} / {rootNode.fileName || ''}
@@ -296,6 +294,12 @@ export const TreeView: React.FC<TreeViewProps> = ({
           </div>
           {renderTreeNode(rootNode)}
         </div>)}
-    </div>
-  );
+      </div>}
+
+     {filesToRender.length === 0 && (
+        <div style={{ padding: '16px', textAlign: 'center', color: '#888', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
+          No files to display with the current filters.
+        </div>
+      )}
+  </>
 };
