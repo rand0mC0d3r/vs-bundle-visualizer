@@ -209,11 +209,15 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         };
       }).filter(item => item.willShowHeader);
 
+      // const isLast = !showFolderHeader
+      // const isPrelast = siblingInfo?.isLast ?? false;
+
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
           {showFolderHeader && (
             <div className="treemap-folder-header">
-              <span className="treemap-folder-name">[{depth}] {collapsed.name}</span>
+              {/* {JSON.stringify(collapsed)} */}
+              <span className="treemap-folder-name">[{depth}] {depth === 1 ? collapsed.path : collapsed.name}</span>
               <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
             </div>
           )}
