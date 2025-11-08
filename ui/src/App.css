@@ -672,6 +672,10 @@
   border-bottom: 1px solid rgba(var(--vscode-panel-border), 0.5);
 }
 
+.treemap-folder:hover {
+  background-color: var(--vscode-list-hoverBackground, rgba(127, 127, 127, 0.1));
+}
+
 .treemap-folder-name {
   font-weight: 500;
   color: var(--vscode-panelTitle-activeForeground);
