@@ -218,6 +218,10 @@
   margin: 0;
 }
 
+.tree-node .bundle-item {
+    border-bottom: 1px solid var(--vscode-panel-border);
+}
+
 .tree-item {
   display: flex;
   align-items: center;
@@ -226,7 +230,6 @@
   user-select: none;
   border-radius: 2px;
   transition: background-color 0.1s ease;
-  border-bottom: 1px solid var(--vscode-panel-border);
 }
 
 .tree-item:hover {

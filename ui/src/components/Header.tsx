@@ -56,7 +56,7 @@ export const Header: React.FC<HeaderProps> = ({
 
       <div className="toolbar">
         <div className="toolbar-section">
-          <span className="toolbar-label">Files:</span>
+          <span className="toolbar-label">Bundle files:</span>
           <span className="toolbar-value">{filesToRender.length}</span>
         </div>
 
