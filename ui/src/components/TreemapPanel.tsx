@@ -1,10 +1,12 @@
 import React from 'react';
+import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
 import { formatFileSize, getFileColor, getFileIcon } from '../utils/fileUtils';
 import { FolderNode } from './types';
 
 interface TreemapPanelProps {
   bundleData: BundleData;
+  libraryFilters: string[];
   selectedNode: string | null;
   hideZeroByteFiles: boolean;
   hiddenRootFolders: Set<string>;
@@ -13,6 +15,7 @@ interface TreemapPanelProps {
 
 export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   bundleData,
+  libraryFilters,
   selectedNode,
   hideZeroByteFiles,
   hiddenRootFolders,
@@ -27,6 +30,11 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       files: [],
       totalSize: 0
     };
+
+  const { filesToRender } = bundleData
+    ? useFilteredNodes(bundleData, hiddenRootFolders, 'asc', 'name', libraryFilters)
+    : { filesToRender: [] };
+
 
     const folderMap = new Map<string, FolderNode>();
     folderMap.set('', root);
@@ -48,13 +56,14 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       return 0;
     };
 
-    const getAllFiles = (node: any, currentPath: string = ''): Array<{ name: string; size: number; fullPath: string }> => {
-      const files: Array<{ name: string; size: number; fullPath: string }> = [];
+    const getAllFiles = (node: any, currentPath: string = ''): Array<{ name: string; size: number; originalPath: string; fullPath: string }> => {
+      const files: Array<{ name: string; size: number; originalPath: string; fullPath: string }> = [];
 
       if (node.name && !node.children) {
         files.push({
           name: node.name,
           size: getNodeSize(node),
+          originalPath: currentPath.split(".js")[0] + '.js',
           fullPath: currentPath ? `${currentPath}/${node.name}` : node.name
         });
       }
@@ -76,8 +85,16 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       });
     }
 
+    console.log('All files count:', allFiles);
+    console.log('Files to render count:', filesToRender);
+
     // Filter files based on visible root folders and zero-byte filter
-    const filteredFiles = allFiles.filter(file => {
+    const filteredFiles = allFiles
+    .filter(file => {
+      return filesToRender.find(f => f.name === file.originalPath);
+
+    })
+    .filter(file => {
       const firstSlash = file.fullPath.indexOf('/');
       const topLevelFolder = firstSlash > 0 ? file.fullPath.substring(0, firstSlash) : '(root)';
       const isVisible = isRootFolderVisible(topLevelFolder);
@@ -214,15 +231,17 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
 
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
-          {showFolderHeader && (
+          {/* {showFolderHeader && ( */}
             <div className="treemap-folder-header">
               {/* {JSON.stringify(collapsed)} */}
               <span className="treemap-folder-name">[{depth}] {depth === 1 ? collapsed.path : collapsed.name}</span>
               <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
             </div>
-          )}
+          {/* )} */}
           <div style={{
               display:  "flex",
+              // gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+              // gap: '10px',
               flexWrap: "wrap",
               gap: "4px",
               alignItems: "flex-start",

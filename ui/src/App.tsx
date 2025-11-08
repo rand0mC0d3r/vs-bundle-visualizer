@@ -238,6 +238,7 @@ function App() {
             )}
             {showTreemapPanel && (
               <TreemapPanel
+                libraryFilters={libraryFilters}
                 bundleData={bundleData}
                 selectedNode={selectedNode}
                 hideZeroByteFiles={hideZeroByteFiles}
