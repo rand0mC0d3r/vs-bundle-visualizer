@@ -277,8 +277,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
         </div>
       )}
 
-      {filesToRender.map((rootNode: any) => {
-        return <div key={rootNode.name || rootNode.id} className="tree-root">
+      {filesToRender.map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
           <div className="tree-root-header">
             <div className="tree-root-title">
               {rootNode.folder || 'Root'} / {rootNode.fileName || ''}
@@ -290,8 +289,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
             </div>
           </div>
           {renderTreeNode(rootNode)}
-        </div>;
-      })}
+        </div>
+      )}
     </div>}
 
      {filesToRender.length === 0 && (
