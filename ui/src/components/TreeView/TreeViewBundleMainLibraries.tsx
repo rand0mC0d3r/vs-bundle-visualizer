@@ -16,8 +16,17 @@ export const TreeViewBundleMainLibraries: React.FC<TreeViewBundleMainLibraries> 
   onRemoveLibraryFilter,
   uniqueAssetDependencies = []
 }) => {
+
+    const secondaryLibraries = bundleInfo && (bundleInfo?.mainLibraries || [])
+          .filter((lib) => uniqueAssetDependencies.includes(lib))
+          .filter((lib) => lib !== bundleInfo.mainLibrary)
+
+        const ternaryLibraries = bundleInfo && (bundleInfo?.mainLibraries || [])
+          .filter((lib) => !uniqueAssetDependencies.includes(lib))
+          .filter((lib) => lib !== bundleInfo.mainLibrary)
+
     return (
-      <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
         {bundleInfo?.mainLibrary && (
           <span
             className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
@@ -35,16 +44,11 @@ export const TreeViewBundleMainLibraries: React.FC<TreeViewBundleMainLibraries> 
           </span>
         )}
 
-        {bundleInfo?.mainLibraries && bundleInfo?.mainLibraries
-          .filter((lib) => uniqueAssetDependencies.includes(lib))
-          .map((lib) => lib !== bundleInfo.mainLibrary)
-          .filter(Boolean).length > 0 && (
+        {bundleInfo?.mainLibraries && secondaryLibraries.length > 0 && (
           <span className="additional-libraries" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
             {' '}
             [+
-            {bundleInfo.mainLibraries
-              // .filter((lib) => uniqueAssetDependencies.includes(lib))
-              .filter((lib) => lib !== bundleInfo.mainLibrary)
+            {secondaryLibraries
               .map((lib) => (
                 <span
                   key={lib}
@@ -64,6 +68,14 @@ export const TreeViewBundleMainLibraries: React.FC<TreeViewBundleMainLibraries> 
               ))
               .reduce((prev, curr) => [prev, ', ', curr])}
             ]
+          </span>
+        )}
+
+         {bundleInfo?.mainLibraries && ternaryLibraries.length > 0 && (
+          <span className="additional-libraries" title={ternaryLibraries.join(', ')} style={{ opacity: 0.5, width: '250px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {ternaryLibraries
+              .map((lib) => lib)
+              .reduce((prev, curr) => [prev, ', ', curr])}
           </span>
         )}
       </div>
