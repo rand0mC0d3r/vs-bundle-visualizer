@@ -262,15 +262,16 @@ export const TreeView: React.FC<TreeViewProps> = ({
         }))
         .map((rootNode: any) => ({
           ...rootNode,
-          folder: rootNode.name.split('/')[0] + '/',
+          folder: rootNode.name.split('/')[0],
+          fileName: rootNode.name.split('/').slice(1).join('/'),
+          hashed: rootNode.name.split('-')[1].split('.')[0] || '',
           totalSize: getNodeSize(rootNode, bundleData),
           counts: countFiles(rootNode)
         }))
         .map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
           <div className="tree-root-header">
-            {JSON.stringify(rootNode)}
             <div className="tree-root-title">
-              {rootNode.name || 'Root'}
+              {rootNode.folder || 'Root'} / {rootNode.fileName || ''}
             </div>
             <div className="tree-root-stats">
               <span className="tree-root-count">
