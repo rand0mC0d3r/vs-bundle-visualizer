@@ -3,6 +3,7 @@ import { BundleData } from '../types';
 export interface DependencyInfo {
   consumers: string[];
   dependencies: string[];
+  dependenciesParsed: string[];
   isVendor: boolean;
   mainLibrary?: string;
   mainLibraries?: string[];
@@ -34,6 +35,7 @@ export const buildDependencyMap = (bundleData: BundleData): DependencyMap => {
         map[bundleName] = {
           consumers: [],
           dependencies: [],
+          dependenciesParsed: [],
           isVendor,
           mainLibrary: undefined
         };

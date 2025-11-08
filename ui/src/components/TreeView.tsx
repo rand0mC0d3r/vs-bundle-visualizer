@@ -225,42 +225,43 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return <div className="tree-container">No data available</div>;
   }
 
-  console.clear()
-  const filesToRender = sortNodes(bundleData.tree.children
-        .filter(rootNode => {
-          // Check if any file in this root node belongs to a visible folder and matches filters
-          const hasVisibleFiles = (node: any, currentPath: string = ''): boolean => {
-            if (node.name && !node.children) {
-              // This is a file - check if its top-level folder is visible
-              const fullPath = currentPath ? `${currentPath}/${node.name}` : node.name;
-              const firstSlash = fullPath.indexOf('/');
-              const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
+  // console.clear()
+  const filesToRender = sortNodes(bundleData.tree.children)
+    .map((rootNode: any) => ({
+      ...rootNode,
+      folder: rootNode.name.split('/')[0],
+      fileName: rootNode.name.split('/').slice(1).join('/'),
+      hashed: rootNode.name.split('-')[1].split('.')[0] || '',
+      totalSize: getNodeSize(rootNode, bundleData),
+      counts: countFiles(rootNode)
+    }))
+    .filter(rootNode => isRootFolderVisible(rootNode.folder))
+    .filter(rootNode => {
+      const bundleInfo = dependencyMap[rootNode.name];
 
-              return isRootFolderVisible(topLevelFolder);
-            }
+      if (bundleInfo && libraryFilters.length > 0) {
+        if(bundleInfo.isVendor) {
+          return libraryFilters.some(lf => bundleInfo.mainLibraries?.some(ml => ml === lf))
+        } else {
+          console.log(',,', bundleInfo)
+          const parsedDependencies = bundleInfo.dependencies.map(dep =>
+            dependencyMap[dep]?.mainLibrary ||
+            dep.replace(/^vendor\/vendor__/, '').replace(/\.js$/, '').split('-')[0]
+          )
+          return libraryFilters.some(lf => parsedDependencies.some(pd => pd === lf))
+        }
 
-            if (node.children) {
-              return node.children.some((child: any) =>
-                hasVisibleFiles(child, node.name)
-              );
-            }
 
-            return false;
-          };
 
-          return hasVisibleFiles(rootNode);
-        }))
-        .map((rootNode: any) => ({
-          ...rootNode,
-          folder: rootNode.name.split('/')[0],
-          fileName: rootNode.name.split('/').slice(1).join('/'),
-          hashed: rootNode.name.split('-')[1].split('.')[0] || '',
-          totalSize: getNodeSize(rootNode, bundleData),
-          counts: countFiles(rootNode)
-        }))
+      }
+
+      return true
+    });
+
 
   return <>
     {filesToRender.length > 0 && <div className="tree-container" style={{ padding: '8px' }}>
+      {filesToRender.length}
       {libraryFilters.length > 0 && (
         <div className="library-filters-header">
           <div className="library-filters-label">Filtering by libraries:</div>
@@ -280,8 +281,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
       )}
 
       {filesToRender.map((rootNode: any) => {
-        // const bundleInfo = dependencyMap[rootNode.name];
-        // console.log('Rendering root node:', rootNode, 'with bundleInfo:', bundleInfo, dependencyMap);
         return <div key={rootNode.name || rootNode.id} className="tree-root">
           <div className="tree-root-header">
             <div className="tree-root-title">
