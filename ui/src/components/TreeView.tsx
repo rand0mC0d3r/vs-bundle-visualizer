@@ -3,6 +3,8 @@ import { BundleData } from '../types';
 import { buildDependencyMap, checkNodeMatchesLibraryFilters, DependencyMap as SharedDependencyMap } from '../utils/dependencyUtils';
 import { formatFileSize, getFileExtension, getFileIcon, getNodeSize } from '../utils/fileUtils';
 import { TreeViewBundleMainLibraries } from './TreeView/TreeViewBundleMainLibraries';
+import { TreeViewDependencyAsset } from './TreeView/TreeViewDependencyAsset';
+import { TreeViewDependencyVendor } from './TreeView/TreeViewDependencyVendor';
 import { SortCriteria, SortDirection } from './types';
 
 interface TreeViewProps {
@@ -169,54 +171,15 @@ export const TreeView: React.FC<TreeViewProps> = ({
           {/* Show dependency information for bundle files */}
           {bundleInfo && (
             <div className="dependency-info" style={{ paddingLeft: (level + 1) * 16 + 24 }}>
-              {bundleInfo.isVendor ? (
-                // Vendor bundle - show what assets use it
-                bundleInfo.consumers.length > 0 && (
-                  <div className="dependency-section">
-                    {/* <div className="dependency-label">📦 Used by:</div> */}
-                    <div className="dependency-list">
-                      {bundleInfo.consumers.map(consumer => (
-                        <span key={consumer} className="dependency-item consumer-item">
-                          {consumer.replace('assets/', '')}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                )
-              ) : (
-                // Asset bundle - show what vendors it depends on
-                bundleInfo.dependencies.length > 0 && (
-                  <div className="dependency-section">
-                    {/* <div className="dependency-label">🔗 Dependencies:</div> */}
-                    <div className="dependency-list">
-                      {bundleInfo.dependencies.map(dep => {
-                        const depInfo = dependencyMap[dep];
-                        const libraryName = depInfo?.mainLibrary || dep.replace('vendor/vendor__', '').replace('.js', '');
-                        const isActive = depInfo?.mainLibrary && libraryFilters.includes(depInfo.mainLibrary);
-                        return (
-                          <span
-                            key={dep}
-                            className={`dependency-item dependency-item-vendor clickable ${isActive ? 'active' : ''}`}
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (depInfo?.mainLibrary) {
-                                if (isActive) {
-                                  onRemoveLibraryFilter(depInfo.mainLibrary);
-                                } else {
-                                  onAddLibraryFilter(depInfo.mainLibrary);
-                                }
-                              }
-                            }}
-                            title={`${isActive ? 'Remove' : 'Add'} filter: ${libraryName}`}
-                          >
-                            {libraryName}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )
-              )}
+              {bundleInfo.isVendor
+                ? <TreeViewDependencyVendor {...{ bundleInfo }} />
+                : <TreeViewDependencyAsset
+                    bundleInfo={bundleInfo}
+                    dependencyMap={dependencyMap}
+                    libraryFilters={libraryFilters}
+                    onAddLibraryFilter={onAddLibraryFilter}
+                    onRemoveLibraryFilter={onRemoveLibraryFilter}
+                  />}
             </div>
           )}
         </div>

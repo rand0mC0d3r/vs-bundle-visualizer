@@ -1,7 +1,8 @@
 import React from 'react';
+import { DependencyInfo } from '../../utils/dependencyUtils';
 
 interface TreeViewBundleMainLibraries {
-  bundleInfo: any;
+  bundleInfo: DependencyInfo;
   libraryFilters: string[];
   onAddLibraryFilter: (library: string) => void;
   onRemoveLibraryFilter: (library: string) => void;
