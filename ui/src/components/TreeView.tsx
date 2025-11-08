@@ -260,7 +260,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
               const isVisible = isRootFolderVisible(topLevelFolder);
 
               // Also check if it matches library filters
-              return isVisible && nodeMatchesFilters(node, currentPath);
+              // return isVisible && nodeMatchesFilters(node, currentPath);
+              return isVisible
             }
 
             if (node.children) {
