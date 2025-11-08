@@ -198,6 +198,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         (allFolders.length > 0 || (allFiles.length > 3 && collapsed.totalSize > totalSize * 0.1));
 
       const isLast = !showFolderHeader
+      const isPrelast = showFolderHeader //help me dynamically ;
 
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
@@ -208,6 +209,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
             </div>
           )}
           {isLast ? 'last' : null}
+          {isPrelast ? 'prelast' : null}
           <div style={{
               display: isLast ? "grid" : "flex",
               // display:  "flex",
