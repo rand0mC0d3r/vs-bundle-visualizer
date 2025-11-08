@@ -5,6 +5,7 @@ export interface DependencyInfo {
   dependencies: string[];
   isVendor: boolean;
   mainLibrary?: string;
+  mainLibraries?: string[];
 }
 
 export interface DependencyMap {
@@ -40,9 +41,18 @@ export const buildDependencyMap = (bundleData: BundleData): DependencyMap => {
 
       // Extract main library name for vendor bundles
       if (isVendor && meta.id) {
+
         const libMatch = meta.id.match(/node_modules\/([^\/]+)/);
         if (libMatch && !map[bundleName].mainLibrary) {
           map[bundleName].mainLibrary = libMatch[1];
+          map[bundleName].mainLibraries = [libMatch[1]];
+        } else if (libMatch) {
+          if (!map[bundleName].mainLibraries) {
+            map[bundleName].mainLibraries = [];
+          }
+          if (!map[bundleName].mainLibraries.includes(libMatch[1])) {
+            map[bundleName].mainLibraries.push(libMatch[1]);
+          }
         }
       }
     }

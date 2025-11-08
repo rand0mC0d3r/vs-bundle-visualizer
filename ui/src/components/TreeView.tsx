@@ -34,6 +34,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
   onRemoveLibraryFilter
 }) => {
 
+  console.log('Rendering TreeView with bundleData:', bundleData);
+
   // Extract dependency relationships from nodeMetas
   const dependencyMap = useMemo((): SharedDependencyMap => {
     return buildDependencyMap(bundleData);
@@ -118,6 +120,8 @@ export const TreeView: React.FC<TreeViewProps> = ({
     const bundleInfo = dependencyMap[fullPath];
     const isBundle = !!bundleInfo;
 
+    console.log('Rendering node:', nodeId, 'isFolder:', isFolder, 'isBundle:', isBundle, 'bundleInfo:', bundleInfo);
+
     return (
       <div key={nodeId} className="tree-node" data-file-path={nodeId}>
         <div
@@ -144,11 +148,11 @@ export const TreeView: React.FC<TreeViewProps> = ({
               {getFileIcon(node.name, isFolder)}
             </div>
 
-            <div className={`tree-label ${isFolder ? 'folder' : ''}`}>
+            <div className={`tree-label ${isFolder ? 'folder' : ''}`} style={{ flexWrap: 'wrap' }}>
               {node.name}
               {bundleInfo?.mainLibrary && (
                 <span
-                  className={`main-library clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
+                  className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(bundleInfo.mainLibrary) ? 'active' : ''}`}
                   onClick={(e) => {
                     e.stopPropagation();
                     if (libraryFilters.includes(bundleInfo.mainLibrary!)) {
@@ -159,9 +163,41 @@ export const TreeView: React.FC<TreeViewProps> = ({
                   }}
                   title={`${libraryFilters.includes(bundleInfo.mainLibrary!) ? 'Remove' : 'Add'} filter: ${bundleInfo.mainLibrary}`}
                 >
-                  ({bundleInfo.mainLibrary})
+                  {bundleInfo.mainLibrary}
                 </span>
               )}
+
+              {bundleInfo?.mainLibraries && bundleInfo?.mainLibraries
+                .map((lib) => lib !== bundleInfo.mainLibrary)
+                .filter(Boolean).length > 0 && (
+                <span className="additional-libraries" style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+                  {' '}
+                  [+
+                  {bundleInfo.mainLibraries
+                    .filter((lib) => lib !== bundleInfo.mainLibrary)
+                    .map((lib) => (
+                      <span
+                        key={lib}
+                        className={`dependency-item dependency-item-vendor clickable ${libraryFilters.includes(lib) ? 'active' : ''}`}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (libraryFilters.includes(lib)) {
+                            onRemoveLibraryFilter(lib);
+                          } else {
+                            onAddLibraryFilter(lib);
+                          }
+                        }}
+                        title={`${libraryFilters.includes(lib) ? 'Remove' : 'Add'} filter: ${lib}`}
+                      >
+                        {lib}
+                      </span>
+                    ))
+                    .reduce((prev, curr) => [prev, ', ', curr])}
+                  ]
+                </span>
+              )}
+
+
             </div>
 
             {nodeSize > 0 && (
