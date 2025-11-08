@@ -197,6 +197,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       const showFolderHeader = collapsed.name && collapsed.name !== 'root' &&
         (allFolders.length > 0 || (allFiles.length > 3 && collapsed.totalSize > totalSize * 0.1));
 
+      const isLast = !showFolderHeader
+
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
           {showFolderHeader && (
@@ -205,14 +207,15 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
               <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
             </div>
           )}
+          {isLast ? 'last' : null}
           <div style={{
-              // display: [4, 5, 6, 7].includes(depth) ? "grid" : "flex",
-              display:  "flex",
+              display: isLast ? "grid" : "flex",
+              // display:  "flex",
               flexWrap: "wrap",
               gap: "4px",
               alignItems: "flex-start",
-              // gridTemplateColumns: [4, 5, 6, 7].includes(depth) ? "repeat(auto-fit, 1fr)" : "none",
-              // gridAutoRows: [4, 5, 6, 7].includes(depth) ? "minmax(15px, auto)" : "none"
+              gridTemplateColumns: isLast ? "repeat(auto-fit, 1fr)" : "none",
+              gridAutoRows: isLast ? "minmax(15px, auto)" : "none"
           }}>
             {allFolders.map(subfolder => renderFolder(subfolder, depth + 1))}
             {allFiles.map(file => {
