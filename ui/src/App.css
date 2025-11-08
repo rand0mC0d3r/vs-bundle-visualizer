@@ -768,6 +768,7 @@
 .treemap-file {
   border-radius: 2px;
   cursor: pointer;
+  font-family: var(--vscode-editor-font-family);
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;

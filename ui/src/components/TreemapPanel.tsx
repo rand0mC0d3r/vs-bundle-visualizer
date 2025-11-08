@@ -214,22 +214,22 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
 
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
-          {showFolderHeader && (
+          {/* {showFolderHeader && ( */}
             <div className="treemap-folder-header">
               <span className="treemap-folder-name">[{depth}] {collapsed.name}</span>
               <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
             </div>
-          )}
+          {/* )} */}
           {isLast ? 'last' : null}
           {isPrelast ? 'prelast' : null}
           <div style={{
-              display: (isLast || isPrelast) ? "grid" : "flex",
+              display: ( isPrelast) ? "grid" : "flex",
               // display:  "flex",
               flexWrap: "wrap",
               gap: "4px",
               alignItems: "flex-start",
-              gridTemplateColumns: (isLast || isPrelast) ? "repeat(auto-fill, 1fr)" : "none",
-              gridAutoRows: (isLast || isPrelast) ? "minmax(15px, auto)" : "none"
+              gridTemplateColumns: ( isPrelast) ? "repeat(auto-fill, 1fr)" : "none",
+              gridAutoRows: ( isPrelast) ? "minmax(15px, auto)" : "none"
           }}>
             {allFolders.map((subfolder) => {
               // Calculate sibling position info based on which folders will actually show headers
@@ -259,24 +259,23 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                     width: `${size*2}px`,
                     height: `${size * 1.75}px`,
                     backgroundColor: lightColor,
-                    // border: `1px solid ${baseColor}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '2px',
                     minWidth: `${minSize}px`,
                     minHeight: `${minSize * 0.75}px`
                   }}
                   onClick={() => onScrollToFile(file.fullPath)}
                   title={`${file.name} - ${formatFileSize(file.size)}`}
                 >
-                  {/* <div className="treemap-file-content"> */}
-                    <div className="treemap-file-icon">
-                      {getFileIcon(file.name, false)}
-                    </div>
-                    {/* <div className="treemap-file-name">
-                      {file.name.length > 12 ? `${file.name.substring(0, 9)}...` : file.name}
-                    </div> */}
-                    <div className="treemap-file-size">
-                      {formatFileSize(file.size)}
-                    </div>
-                  {/* </div> */}
+                  <div className="treemap-file-icon">
+                    {getFileIcon(file.name, false)}
+                  </div>
+                  <div className="treemap-file-size">
+                    {formatFileSize(file.size)}
+                  </div>
                 </div>
               );
             })}
