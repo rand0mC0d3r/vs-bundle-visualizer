@@ -145,7 +145,45 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return acc;
   }, {});
 
-  const sortedGroupedFiles = Object.keys(groupFilesByFolder).sort().reduce((acc: any, folderName: string) => {
+  const sortedGroupedFiles = Object.keys(groupFilesByFolder)
+  .sort((a, b) => {
+    let aValue: any, bValue: any;
+
+      switch (sortCriteria) {
+        case 'filename':
+          aValue = a.toLowerCase();
+          bValue = b.toLowerCase();
+          break;
+        case 'fileCount':
+          aValue = groupFilesByFolder[a].length;
+          bValue = groupFilesByFolder[b].length;
+          break;
+        case 'fileSize':
+          aValue = groupFilesByFolder[a].reduce((acc: number, file: any) => acc + file.totalSize, 0);
+          bValue = groupFilesByFolder[b].reduce((acc: number, file: any) => acc + file.totalSize, 0);
+          break;
+        default:
+          aValue = a.toLowerCase();
+          bValue = b.toLowerCase();
+      }
+
+      if (sortCriteria === 'filename') {
+        // String comparison
+        if (sortDirection === 'asc') {
+          return aValue.localeCompare(bValue);
+        } else {
+          return bValue.localeCompare(aValue);
+        }
+      } else {
+        // Numeric comparison
+        if (sortDirection === 'asc') {
+          return aValue - bValue;
+        } else {
+          return bValue - aValue;
+        }
+      }
+  })
+  .reduce((acc: any, folderName: string) => {
     acc[folderName] = groupFilesByFolder[folderName];
     return acc;
   }, {});
