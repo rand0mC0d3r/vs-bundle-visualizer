@@ -236,7 +236,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
               const firstSlash = fullPath.indexOf('/');
               const topLevelFolder = firstSlash > 0 ? fullPath.substring(0, firstSlash) : '(root)';
 
-              return isRootFolderVisible(topLevelFolder) && nodeMatchesFilters(node, currentPath);
+              return isRootFolderVisible(topLevelFolder);
             }
 
             if (node.children) {
@@ -279,9 +279,14 @@ export const TreeView: React.FC<TreeViewProps> = ({
         </div>
       )}
 
-      {filesToRender.map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
+      {filesToRender.map((rootNode: any) => {
+        // const bundleInfo = dependencyMap[rootNode.name];
+        // console.log('Rendering root node:', rootNode, 'with bundleInfo:', bundleInfo, dependencyMap);
+        return <div key={rootNode.name || rootNode.id} className="tree-root">
           <div className="tree-root-header">
             <div className="tree-root-title">
+              {/* {JSON.stringify(rootNode)} */}
+
               {rootNode.folder || 'Root'} / {rootNode.fileName || ''}
             </div>
             <div className="tree-root-stats">
@@ -291,8 +296,9 @@ export const TreeView: React.FC<TreeViewProps> = ({
             </div>
           </div>
           {renderTreeNode(rootNode)}
-        </div>)}
-      </div>}
+        </div>;
+      })}
+    </div>}
 
      {filesToRender.length === 0 && (
         <div style={{ padding: '16px', textAlign: 'center', color: '#888', display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', height: '100%' }}>
