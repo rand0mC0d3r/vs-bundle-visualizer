@@ -178,7 +178,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       };
     };
 
-    const renderFolder = (folderData: FolderNode): JSX.Element => {
+    const renderFolder = (folderData: FolderNode, depth: number = 0): JSX.Element => {
       if (folderData.totalSize === 0) {
         return <></>;
       }
@@ -198,15 +198,23 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         (allFolders.length > 0 || (allFiles.length > 3 && collapsed.totalSize > totalSize * 0.1));
 
       return (
-        <div className="treemap-folder" key={collapsed.path}>
+        <div className={'treemap-folder'} key={collapsed.path}>
           {showFolderHeader && (
             <div className="treemap-folder-header">
-              <span className="treemap-folder-name">{collapsed.name}</span>
+              <span className="treemap-folder-name">[{depth}] {collapsed.name}</span>
               <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
             </div>
           )}
-          <div className="treemap-container">
-            {allFolders.map(subfolder => renderFolder(subfolder))}
+          <div style={{
+              // display: [4, 5, 6, 7].includes(depth) ? "grid" : "flex",
+              display:  "flex",
+              flexWrap: "wrap",
+              gap: "4px",
+              alignItems: "flex-start",
+              // gridTemplateColumns: [4, 5, 6, 7].includes(depth) ? "repeat(auto-fit, 1fr)" : "none",
+              // gridAutoRows: [4, 5, 6, 7].includes(depth) ? "minmax(15px, auto)" : "none"
+          }}>
+            {allFolders.map(subfolder => renderFolder(subfolder, depth + 1))}
             {allFiles.map(file => {
               const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
               const minSize = 20; // Minimum tile size in pixels
@@ -222,27 +230,27 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   key={file.fullPath}
                   className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''}`}
                   style={{
-                    width: `${size}px`,
-                    height: `${size * 0.75}px`,
+                    width: `${size*2}px`,
+                    height: `${size * 1.75}px`,
                     backgroundColor: lightColor,
-                    border: `1px solid ${baseColor}`,
+                    // border: `1px solid ${baseColor}`,
                     minWidth: `${minSize}px`,
                     minHeight: `${minSize * 0.75}px`
                   }}
                   onClick={() => onScrollToFile(file.fullPath)}
                   title={`${file.name} - ${formatFileSize(file.size)}`}
                 >
-                  <div className="treemap-file-content">
+                  {/* <div className="treemap-file-content"> */}
                     <div className="treemap-file-icon">
                       {getFileIcon(file.name, false)}
                     </div>
-                    <div className="treemap-file-name">
+                    {/* <div className="treemap-file-name">
                       {file.name.length > 12 ? `${file.name.substring(0, 9)}...` : file.name}
-                    </div>
+                    </div> */}
                     <div className="treemap-file-size">
                       {formatFileSize(file.size)}
                     </div>
-                  </div>
+                  {/* </div> */}
                 </div>
               );
             })}
@@ -251,7 +259,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       );
     };
 
-    return renderFolder(folder);
+    return renderFolder(folder, 0);
   };
 
   if (!bundleData) {

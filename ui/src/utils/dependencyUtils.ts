@@ -16,6 +16,10 @@ export interface DependencyMap {
 export const buildDependencyMap = (bundleData: BundleData): DependencyMap => {
   const map: DependencyMap = {};
 
+  if(!bundleData || !bundleData.nodeMetas) {
+    return {};
+  }
+
   if (!bundleData.nodeMetas) {
     return map;
   }

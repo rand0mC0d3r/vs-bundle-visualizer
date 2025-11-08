@@ -45,7 +45,10 @@ export const Header: React.FC<HeaderProps> = ({
   onCollapseAll,
   onRefresh,
 }) => {
-    const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders, sortCriteria, sortDirection, libraryFilters);
+  const { filesToRender } = bundleData
+    ? useFilteredNodes(bundleData, hiddenRootFolders, sortCriteria, sortDirection, libraryFilters)
+    : { filesToRender: [] };
+
   return (
     <div className="header">
       <div className="header-title">
