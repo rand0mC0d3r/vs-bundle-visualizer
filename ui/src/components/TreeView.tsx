@@ -255,6 +255,19 @@ export const TreeView: React.FC<TreeViewProps> = ({
       return false
     });
 
+  const groupFilesByFolder = filesToRender.reduce((acc: any, file: any) => {
+    const folderName = file.folder || 'Root';
+    if (!acc[folderName]) {
+      acc[folderName] = [];
+    }
+    acc[folderName].push(file);
+    return acc;
+  }, {});
+
+  const sortedGroupedFiles = Object.keys(groupFilesByFolder).sort().reduce((acc: any, folderName: string) => {
+    acc[folderName] = groupFilesByFolder[folderName];
+    return acc;
+  }, {});
 
   return <>
     {filesToRender.length > 0 && <div className="tree-container" style={{ padding: '8px' }}>
@@ -277,7 +290,24 @@ export const TreeView: React.FC<TreeViewProps> = ({
         </div>
       )}
 
-      {filesToRender.map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
+      {Object.entries(sortedGroupedFiles).map(([folderName, files]: [string, any]) => <div key={folderName} className="tree-root">
+          <div className="tree-root-header">
+            <div className="tree-root-title">
+              {folderName}
+            </div>
+            <div className="tree-root-stats">
+              <span className="tree-root-count">
+                {files.length} file{files.length !== 1 ? 's' : ''}
+              </span>
+            </div>
+          </div>
+          {files.map((rootNode: any) => renderTreeNode(rootNode))}
+        </div>)}
+
+
+
+
+      {/* {filesToRender.map((rootNode: any) => <div key={rootNode.name || rootNode.id} className="tree-root">
           <div className="tree-root-header">
             <div className="tree-root-title">
               {rootNode.folder || 'Root'} / {rootNode.fileName || ''}
@@ -290,7 +320,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
           </div>
           {renderTreeNode(rootNode)}
         </div>
-      )}
+      )} */}
     </div>}
 
      {filesToRender.length === 0 && (
