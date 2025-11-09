@@ -1,0 +1,4 @@
+.vscode/**,
+.git/**,
+.gitignore,
+**/ui/node_modules

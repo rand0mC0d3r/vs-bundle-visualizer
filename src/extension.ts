@@ -11,8 +11,53 @@ export async function activate(context: vscode.ExtensionContext) {
     }),
     vscode.commands.registerCommand('bundleVisualizer.refresh', () => {
       provider.refresh();
-    })
+    }),
+    vscode.commands.registerCommand('bundleVisualizer.askCopilot', async (uri: vscode.Uri) => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        vscode.window.showWarningMessage('No file is currently open.');
+        return;
+      }
+
+      const doc = editor.document;
+      const filePath = doc.uri.fsPath;
+
+      const question = `Explain the import chain for this file: ${filePath}`;
+
+      // Optionally include the code or a trimmed portion
+      const codeSnippet = doc.getText().slice(0, 5000); // limit to 5k chars
+      const prompt = `${question}\n\nHere is the file content (truncated):\n${codeSnippet}`;
+
+      console.log('Prompt to Copilot:', prompt);
+
+      // Opens Copilot Chat with prefilled question
+      await vscode.commands.executeCommand('github.copilot.interactiveChat.open', {
+        input: prompt
+      });
+
+
+      })
   );
+
+
+  // const disposable = vscode.commands.registerCommand('bundleVisualizer.askCopilot', async (uri: vscode.Uri) => {
+  //   const document = await vscode.workspace.openTextDocument(uri);
+  //   const question = `Explain the import chain for this file: ${uri.fsPath}`;
+
+  //   // You can send both the text and the question
+  //   await copilot.chat.ask({
+  //     prompt: question,
+  //     context: [
+  //       {
+  //         type: 'file',
+  //         uri,
+  //         text: document.getText()
+  //       }
+  //     ]
+  //   });
+  // });
+
+  // context.subscriptions.push(disposable);
 
   // Auto-show the panel on activation
   provider.show();
@@ -26,6 +71,10 @@ class BundleVisualizerProvider {
 
   constructor(extensionUri: vscode.Uri) {
     this.extensionUri = extensionUri;
+  }
+
+  public askAboutFile(uri: vscode.Uri) {
+    vscode.commands.executeCommand('bundleVisualizer.askCopilot', uri);
   }
 
   public show() {

@@ -27,7 +27,6 @@
     "onStartupFinished",
     "workspaceContains:**/*.{ts,tsx,js,jsx}"
   ],
-  "icon": "icon.png",
   "license": "MIT",
   "main": "./dist/extension.js",
   "files": [
@@ -53,6 +52,10 @@
       {
         "command": "bundleVisualizer.refresh",
         "title": "Bundle Visualizer: Refresh Data"
+      },
+      {
+        "command": "bundleVisualizer.askCopilot",
+        "title": "Bundle Visualizer: Ask Copilot to Explain Import Chain"
       }
     ],
     "configuration": {
