@@ -1,5 +1,6 @@
+import { hierarchy as d3Hierarchy, treemap as d3Treemap, treemapSquarify } from 'd3-hierarchy';
 import potpack from 'potpack';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
 import { formatFileSize, getFileColor, getFileIcon } from '../utils/fileUtils';
@@ -185,127 +186,205 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
 
     return root;
   };
+  // Layout configuration state
+  const [useD3, setUseD3] = useState(false);
+  const [subgroupThreshold, setSubgroupThreshold] = useState(0.10);
 
-  const renderTreemap = (folder: FolderNode): JSX.Element => {
-    // We'll create a grouped global layout:
-    // 1) collect all visible files and group them by top-level folder
-    // 2) for each top-level folder, potpack its files to get local boxes
-    // 3) potpack the folder boxes to get global positions
-    // 4) scale everything to fit the measured container
+  // Compute folder structure once
+  const folderStructure = buildFolderStructure(bundleData, filesToRender);
 
-    // collect all files with their top-level folder
-    const filesList: Array<{ name: string; size: number; fullPath: string; rootFolder: string; parentFolder: string }> = [];
+  // Compute layout (either grouped potpack or d3 treemap)
+  const layout = useMemo(() => {
+    const groups = new Map<string, Array<any>>();
+    const SUBGROUP_THRESHOLD = subgroupThreshold;
 
-    const walk = (node: FolderNode, parentPath: string) => {
-      const path = node.path || parentPath;
-      node.files.forEach(f => {
-        const firstSlash = f.fullPath.indexOf('/');
-        const top = firstSlash > 0 ? f.fullPath.substring(0, firstSlash) : '(root)';
-        filesList.push({ name: f.name, size: f.size, fullPath: f.fullPath, rootFolder: top, parentFolder: path });
-      });
-      node.children.forEach(c => walk(c, path));
+    const collectFiles = (node: FolderNode, collectInto: Array<any>, groupKey: string) => {
+      node.files.forEach((f: any) => collectInto.push({ name: f.name, size: f.size, fullPath: f.fullPath, groupKey }));
+      node.children.forEach(c => collectFiles(c, collectInto, groupKey));
     };
 
-    walk(folder, '');
+    // root files
+    if (folderStructure.files && folderStructure.files.length > 0) {
+      const rootKey = '(root)';
+      groups.set(rootKey, []);
+      collectFiles(folderStructure, groups.get(rootKey)!, rootKey);
+    }
 
-    // group by rootFolder
-    const groups = new Map<string, typeof filesList>();
-    filesList.forEach(f => {
-      if (!groups.has(f.rootFolder)) groups.set(f.rootFolder, [] as any);
-      groups.get(f.rootFolder)!.push(f);
+    (folderStructure.children || []).forEach((top) => {
+      const topKey = top.name || top.path || '(root)';
+      if (!groups.has(topKey)) groups.set(topKey, []);
+      top.files.forEach((f: any) => groups.get(topKey)!.push({ name: f.name, size: f.size, fullPath: f.fullPath, groupKey: topKey }));
+      (top.children || []).forEach(child => {
+        const proportion = child.totalSize / Math.max(1, top.totalSize);
+        if (proportion >= SUBGROUP_THRESHOLD) {
+          const childKey = `${topKey}/${child.name}`;
+          groups.set(childKey, []);
+          collectFiles(child, groups.get(childKey)!, childKey);
+        } else {
+          collectFiles(child, groups.get(topKey)!, topKey);
+        }
+      });
     });
 
-    // pack each group's files locally
-    const folderBoxes: Array<any> = [];
+    // If using d3, create hierarchy and treemap
+    if (useD3) {
+      try {
+        const rootObj: any = { name: folderStructure.name || 'root', children: [] };
+        const folderToNode = (node: FolderNode) => {
+          const obj: any = { name: node.name || node.path || '', children: [] };
+          node.children.forEach(c => obj.children.push(folderToNode(c)));
+          node.files.forEach(f => obj.children.push({ name: f.name, value: f.size, fullPath: f.fullPath }));
+          return obj;
+        };
+        folderStructure.children.forEach(c => rootObj.children.push(folderToNode(c)));
+
+        const root = d3Hierarchy(rootObj).sum((d: any) => d.value || 0);
+        const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(3).tile(treemapSquarify);
+        treemapLayout(root as any);
+
+        const tiles: any[] = [];
+        root.leaves().forEach((leaf: any) => {
+          if (!leaf.data || !leaf.data.fullPath) return;
+          tiles.push({
+            key: leaf.data.fullPath,
+            x: leaf.x0,
+            y: leaf.y0,
+            w: Math.max(1, leaf.x1 - leaf.x0),
+            h: Math.max(1, leaf.y1 - leaf.y0),
+            name: leaf.data.name,
+            fullPath: leaf.data.fullPath,
+            size: leaf.value,
+            groupKey: (() => {
+              const firstSlash = leaf.data.fullPath.indexOf('/');
+              return firstSlash > 0 ? leaf.data.fullPath.substring(0, firstSlash) : '(root)';
+            })()
+          });
+        });
+
+        // create basic labels by grouping tiles by their top-level groupKey
+        const labelsMap: Record<string, { x: number; y: number; w: number; h: number; total: number }> = {};
+        tiles.forEach(t => {
+          const g = t.groupKey;
+          if (!labelsMap[g]) labelsMap[g] = { x: t.x, y: t.y, w: t.w, h: t.h, total: 0 };
+          labelsMap[g].x = Math.min(labelsMap[g].x, t.x);
+          labelsMap[g].y = Math.min(labelsMap[g].y, t.y);
+          labelsMap[g].w = Math.max(labelsMap[g].w, t.x + t.w - labelsMap[g].x);
+          labelsMap[g].h = Math.max(labelsMap[g].h, t.y + t.h - labelsMap[g].y);
+          labelsMap[g].total += t.size;
+        });
+
+        const labels = Object.keys(labelsMap).map(k => ({ name: k, ...labelsMap[k] }));
+
+        return { tiles, labels, width: containerSize.width, height: containerSize.height };
+      } catch (e) {
+        // fallback to grouped layout on error
+        console.warn('d3 layout failed, falling back to grouped layout', e);
+      }
+    }
+
+    // Grouped potpack layout
+    const folderBoxes: any[] = [];
     const folderMeta: Record<string, any> = {};
 
     groups.forEach((groupFiles, folderName) => {
-      // create boxes scaled by file.size
       const minSide = 18;
-      const targetArea = Math.max(4000, groupFiles.reduce((s, f) => s + f.size, 0));
-      const sideScale = Math.sqrt(targetArea) / Math.max(1, Math.sqrt(groupFiles.length || 1));
-
-      const boxes = groupFiles.map(f => {
-        const area = Math.max(1, (f.size / Math.max(1, groupFiles.reduce((s, x) => s + x.size, 0))) * (sideScale * sideScale * groupFiles.length));
+      const total = groupFiles.reduce((s: number, f: any) => s + f.size, 0);
+      const sideScale = Math.sqrt(Math.max(4000, total));
+      const boxes = groupFiles.map((f: any) => {
+        const area = Math.max(1, (f.size / Math.max(1, total)) * (sideScale * sideScale * Math.max(1, groupFiles.length)));
         const side = Math.max(minSide, Math.sqrt(area));
         return { w: side, h: side, meta: f };
       });
 
       const packed = boxes.length > 0 ? potpack(boxes) : { w: Math.max(150, sideScale), h: Math.max(150, sideScale), fill: 0 };
-
-      folderBoxes.push({ w: packed.w + 10, h: packed.h + 10, meta: { folderName, boxes, packed } });
-      folderMeta[folderName] = { boxes, packed };
+      folderBoxes.push({ w: packed.w + 10, h: packed.h + 10, meta: { folderName, boxes, packed, total } });
+      folderMeta[folderName] = { boxes, packed, total };
     });
 
-    // pack folders globally
     const packedFolders = folderBoxes.length > 0 ? potpack(folderBoxes) : { w: 800, h: 600, fill: 0 };
+    const globalScale = Math.min(containerSize.width / Math.max(1, packedFolders.w), containerSize.height / Math.max(1, packedFolders.h), 1);
 
-    const scale = Math.min(containerSize.width / Math.max(1, packedFolders.w), containerSize.height / Math.max(1, packedFolders.h), 1);
-
-    // Collect file elements with absolute positions
-    const fileElements: JSX.Element[] = [];
+    const tiles: any[] = [];
+    const labels: any[] = [];
 
     folderBoxes.forEach((fb) => {
-      const folderX = (fb.x || 0) * scale;
-      const folderY = (fb.y || 0) * scale;
+      const folderX = (fb.x || 0) * globalScale;
+      const folderY = (fb.y || 0) * globalScale;
+      const folderW = (fb.w || 0) * globalScale;
+      const folderH = (fb.h || 0) * globalScale;
       const { meta } = fb;
-      const { boxes, packed } = meta as any;
+      const { boxes, packed, total } = meta as any;
 
-      const innerScale = Math.min((fb.w - 10) / Math.max(1, packed.w), (fb.h - 10) / Math.max(1, packed.h), 1) * scale;
+      const innerScale = Math.min((fb.w - 10) / Math.max(1, packed.w), (fb.h - 10) / Math.max(1, packed.h), 1) * globalScale;
 
       boxes.forEach((b: any) => {
         const file = b.meta;
         const x = Math.round((b.x || 0) * innerScale + folderX + 5);
         const y = Math.round((b.y || 0) * innerScale + folderY + 5);
-        const w = Math.max(10, Math.round(b.w * innerScale));
-        const h = Math.max(10, Math.round(b.h * innerScale));
-        const baseColor = getFileColor(file.name);
-        const lightColor = baseColor + '80';
-
-        fileElements.push(
-          <div
-            key={file.fullPath}
-            className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''} ${hoveredFolder === file.rootFolder ? 'hovered-folder' : ''}`}
-            style={{
-              position: 'absolute',
-              left: `${x}px`,
-              top: `${y}px`,
-              width: `${w}px`,
-              height: `${h}px`,
-              backgroundColor: lightColor,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '2px',
-              overflow: 'hidden',
-              cursor: 'pointer'
-            }}
-            onMouseEnter={() => setHoveredFolder(file.rootFolder)}
-            onMouseLeave={() => setHoveredFolder(null)}
-            onClick={() => onScrollToFile(file.fullPath)}
-            title={`${file.fullPath} - ${formatFileSize(file.size)}`}
-          >
-            <div className="treemap-file-icon">{getFileIcon(file.name, false)}</div>
-            <div className="treemap-file-size">{formatFileSize(file.size)}</div>
-          </div>
-        );
+        const w = Math.max(6, Math.round(b.w * innerScale));
+        const h = Math.max(6, Math.round(b.h * innerScale));
+        tiles.push({ key: file.fullPath, x, y, w, h, name: file.name, fullPath: file.fullPath, size: file.size, groupKey: file.groupKey });
       });
+
+      labels.push({ name: meta.folderName, x: Math.round(folderX), y: Math.round(folderY), w: Math.round(folderW), h: Math.round(folderH), total });
     });
 
-    return (
-      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-        {fileElements}
-      </div>
-    );
-  };
-
-  const folderStructure = buildFolderStructure(bundleData, filesToRender);
+    return { tiles, labels, width: packedFolders.w * globalScale, height: packedFolders.h * globalScale };
+  }, [folderStructure, containerSize.width, containerSize.height, subgroupThreshold, useD3, hideZeroByteFiles]);
 
   return (
     <ResizablePanel title="File Size Visualization">
-      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-        {renderTreemap(folderStructure)}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <label style={{ fontSize: 12 }}>Layout:</label>
+          <button onClick={() => setUseD3(false)} style={{ fontWeight: !useD3 ? '700' : '400' }}>Grouped</button>
+          <button onClick={() => setUseD3(true)} style={{ fontWeight: useD3 ? '700' : '400' }}>D3 Treemap</button>
+          <label style={{ marginLeft: 12, fontSize: 12 }}>Subgroup threshold:</label>
+          <input type="range" min={0} max={0.5} step={0.01} value={subgroupThreshold} onChange={(e) => setSubgroupThreshold(Number(e.target.value))} />
+          <span style={{ width: 40 }}>{Math.round(subgroupThreshold * 100)}%</span>
+        </div>
+        <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+          {/* labels */}
+          {layout.labels.map((label: any) => (
+            <div key={`lbl-${label.name}`} style={{ position: 'absolute', left: label.x, top: label.y, pointerEvents: 'none' }}>
+              <div style={{ background: 'rgba(0,0,0,0.6)', color: 'white', padding: '2px 6px', fontSize: 12, borderRadius: 3 }}>{label.name} ({formatFileSize(label.total)})</div>
+            </div>
+          ))}
+
+          {/* tiles */}
+          {layout.tiles.map((t: any) => {
+            const baseColor = getFileColor(t.name);
+            const lightColor = baseColor + '80';
+            return (
+              <div
+                key={t.key}
+                className={`treemap-file ${selectedNode === t.fullPath ? 'selected' : ''} ${hoveredFolder === t.groupKey ? 'hovered-folder' : ''}`}
+                style={{
+                  position: 'absolute',
+                  left: t.x,
+                  top: t.y,
+                  width: t.w,
+                  height: t.h,
+                  backgroundColor: lightColor,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '2px',
+                  overflow: 'hidden',
+                  cursor: 'pointer'
+                }}
+                onMouseEnter={() => setHoveredFolder(t.groupKey)}
+                onMouseLeave={() => setHoveredFolder(null)}
+                onClick={() => onScrollToFile(t.fullPath)}
+                title={`${t.fullPath} - ${formatFileSize(t.size)}`}
+              >
+                <div className="treemap-file-icon">{getFileIcon(t.name, false)}</div>
+                <div className="treemap-file-size">{formatFileSize(t.size)}</div>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </ResizablePanel>
   );
