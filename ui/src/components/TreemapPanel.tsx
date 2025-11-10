@@ -235,11 +235,10 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
           {/* {showFolderHeader && ( */}
-            <div className="treemap-folder-header">
-              {/* {JSON.stringify(collapsed)} */}
+            {/* <div className="treemap-folder-header">
               <span className="treemap-folder-name">[{depth}] {folderName}</span>
               <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
-            </div>
+            </div> */}
           {/* )} */}
           <div style={{
               display:  "flex",

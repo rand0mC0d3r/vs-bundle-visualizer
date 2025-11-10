@@ -714,6 +714,10 @@
   color: var(--vscode-panelTitle-activeForeground);
   font-size: 11px;
   opacity: 0.9;
+  width: 60px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .treemap-folder-size {
