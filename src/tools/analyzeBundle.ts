@@ -37,7 +37,7 @@ async function analyzeBundle(filterOptions?: FilterOptions) {
     totalSize: processedNodes.reduce((sum, node) => sum + node.totalSize, 0),
     files: processedNodes.map(node => ({
       name: node.name,
-      children: node.children,
+      children: filterOptions?.showChildren ? node.children : undefined,
       folder: node.folder,
       fileName: node.fileName,
       size: node.totalSize,
@@ -67,16 +67,25 @@ Optional filter parameters:
 - sortDirection: Sort order - 'asc' (ascending) or 'desc' (descending). Default: 'asc'
 - hiddenRootFolders: Array of root folder names to exclude from results (e.g., ['node_modules/.vite'])
 - libraryFilters: Array of library/folder names to focus on (returns only matching items)
+- showChildren: Whether to include child items in the results
+
+NOTE: showChildren is returning the 'children' property for each file/folder in the results. This can be useful for detailed analysis of bundle structure. But it's optional and can be omitted to reduce output size.
 
 Common use cases:
 - No filters: Get complete bundle overview
 - Sort by fileSize desc: Find the largest contributors
 - Filter by specific libraries: Analyze particular dependencies
 - Hide folders: Remove noise from development artifacts
+- Show children: Include child items in the results for detailed analysis
 
 Example: To find the 10 largest items, use sortCriteria='fileSize' and sortDirection='desc'`,
     type: 'object',
     properties: {
+      showChildren: {
+        type: 'boolean',
+        description: 'Whether to include child items in the results',
+        default: true
+      },
       sortCriteria: {
         type: 'string',
         enum: ['filename', 'fileCount', 'fileSize'],

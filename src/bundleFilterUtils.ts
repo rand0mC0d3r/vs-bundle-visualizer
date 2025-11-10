@@ -5,6 +5,7 @@ export type SortCriteria = 'filename' | 'fileCount' | 'fileSize';
 export type SortDirection = 'asc' | 'desc';
 
 export interface FilterOptions {
+  showChildren?: boolean;
   hiddenRootFolders?: string[];
   sortCriteria?: SortCriteria;
   sortDirection?: SortDirection;
