@@ -43,6 +43,7 @@ async function analyzeBundle(
     totalSize: processedNodes.reduce((sum, node) => sum + node.totalSize, 0),
     files: processedNodes.map(node => ({
       name: node.name,
+      children: node.children,
       folder: node.folder,
       fileName: node.fileName,
       size: node.totalSize,
