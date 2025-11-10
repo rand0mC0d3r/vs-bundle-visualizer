@@ -1,4 +1,5 @@
-import React from 'react';
+import potpack from 'potpack';
+import React, { useEffect, useRef, useState } from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
 import { formatFileSize, getFileColor, getFileIcon } from '../utils/fileUtils';
@@ -27,6 +28,21 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   }
 
   const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders, 'filename', 'asc', libraryFilters);
+
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
+
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(() => {
+      setContainerSize({ width: el.clientWidth || 800, height: el.clientHeight || 600 });
+    });
+    ro.observe(el);
+    // initialize
+    setContainerSize({ width: el.clientWidth || 800, height: el.clientHeight || 600 });
+    return () => ro.disconnect();
+  }, []);
 
   const buildFolderStructure = (bundleData: BundleData, filesToRender: any[]): FolderNode => {
     const root: FolderNode = {
@@ -210,60 +226,63 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
 
       // Don't show folder wrapper if it's just the root or if it only has files and no meaningful structure
 
+      // Use potpack to create a packed layout for files in this folder.
+      // Measure container size from the outer panel (fallbacks provided).
+      // Heuristic: give this folder a packing area proportional to its size.
+      const containerWidth = containerSize.width || 800;
+      const containerHeight = containerSize.height || 600;
+      const containerArea = Math.max(1, containerWidth * containerHeight);
+      const folderArea = Math.max(2000, (collapsed.totalSize / Math.max(1, totalSize)) * containerArea);
+      const packSide = Math.max(150, Math.sqrt(folderArea));
+
+      // Prepare boxes (square tiles) proportional to file sizes within this folder
+      const minSize = 20;
+      const boxes: Array<any> = allFiles.map(file => {
+        // area proportional to file size within the collapsed folder
+        const area = Math.max(1, (file.size / Math.max(1, collapsed.totalSize)) * (packSide * packSide));
+        const side = Math.max(minSize, Math.sqrt(area));
+        return { w: side, h: side, meta: file };
+      });
+
+      const packed = boxes.length > 0 ? potpack(boxes) : { w: packSide, h: packSide, fill: 0 };
+      const scale = Math.min(packSide / Math.max(1, packed.w), packSide / Math.max(1, packed.h), 1);
+
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
-          {/* {showFolderHeader && ( */}
-            {/* <div className="treemap-folder-header">
-              <span className="treemap-folder-name">[{depth}] {folderName}</span>
-              <span className="treemap-folder-size">{formatFileSize(collapsed.totalSize)}</span>
-            </div> */}
-          {/* )} */}
-          <div style={{
-              position: "relative",
-              display:  "flex",
-              flexWrap: "wrap",
-              gap: "4px",
-              alignItems: "flex-start",
-          }}>
+          <div style={{ position: 'relative', width: `${Math.round(packSide)}px`, height: `${Math.round(packSide)}px` }}>
             {allFolders.map((subfolder) => renderFolder(subfolder, depth + 1))}
-            {allFiles.map((file) => {
-              const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
-              const minSize = 20; // Minimum tile size in pixels
-              const maxSize = 200; // Maximum tile size in pixels
-              const size = Math.max(minSize, Math.min(maxSize, Math.sqrt(sizeRatio) * 1000));
-
-              // Get base color and make it lighter for better readability
+            {boxes.map((box) => {
+              const file = box.meta;
+              const x = Math.round((box.x || 0) * scale);
+              const y = Math.round((box.y || 0) * scale);
+              const w = Math.round(box.w * scale);
+              const h = Math.round(box.h * scale);
               const baseColor = getFileColor(file.name);
-              const lightColor = baseColor + '80'; // Add transparency for lighter effect
+              const lightColor = baseColor + '80';
 
               return (
                 <div
                   key={file.fullPath}
                   className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''}`}
                   style={{
-                    // position: 'absolute',
-                    // left: `${allFilesBoxes[i].x}px`,
-                    // top: `${allFilesBoxes[i].y}px`,
-                    width: `${size * 1.125}px`,
-                    height: `${size * 1.125}px`,
+                    position: 'absolute',
+                    left: `${x}px`,
+                    top: `${y}px`,
+                    width: `${w}px`,
+                    height: `${h}px`,
                     backgroundColor: lightColor,
                     display: 'flex',
                     flexDirection: 'column',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '2px',
-                    minWidth: `${minSize}px`,
-                    minHeight: `${minSize * 0.75}px`
+                    overflow: 'hidden'
                   }}
                   onClick={() => onScrollToFile(file.fullPath)}
                   title={`${file.name} - ${formatFileSize(file.size)}`}
                 >
-                  <div className="treemap-file-icon">
-                    {getFileIcon(file.name, false)}
-                  </div>
-                  <div className="treemap-file-size">
-                    {formatFileSize(file.size)}
-                  </div>
+                  <div className="treemap-file-icon">{getFileIcon(file.name, false)}</div>
+                  <div className="treemap-file-size">{formatFileSize(file.size)}</div>
                 </div>
               );
             })}
