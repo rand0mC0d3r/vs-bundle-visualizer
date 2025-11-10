@@ -185,63 +185,56 @@ export async function setupMcp(context: vscode.ExtensionContext) {
     }
   }
 
-  // Commands: start / stop / copy definition
-  const startCmd = vscode.commands.registerCommand('bundleVisualizer.startMcpServer', async () => {
-    await startMcpServer();
-  });
-  disposables.push(startCmd);
-
-  const stopCmd = vscode.commands.registerCommand('bundleVisualizer.stopMcpServer', async () => {
-    if (!httpServer && !transport) {
-      vscode.window.showInformationMessage('MCP server is not running.');
-      return;
-    }
-    try { await server.close(); } catch (err) { console.warn('Error closing MCP server:', err); }
-    try {
-      await new Promise<void>((resolve, reject) => {
-        if (!httpServer) { return resolve(); }
-        httpServer.close((err) => err ? reject(err) : resolve());
-      });
-    } catch (err) {
-      console.warn('Error closing HTTP server:', err);
-    }
-    httpServer = undefined;
-    transport = undefined;
-    transportPort = undefined;
-    vscode.window.showInformationMessage('MCP server stopped.');
-  });
-  disposables.push(stopCmd);
-
-  const copyCmd = vscode.commands.registerCommand('bundleVisualizer.copyMcpDefinition', async () => {
-    try {
-      const config = vscode.workspace.getConfiguration(PACKAGE_NAME);
-      const port = config.get<number>('mcpPort') || 5215;
-
-      const def = {
-        id: 'bundle-visualizer-built-in',
-        label: 'Bundle Visualizer (built-in)',
-        host: 'localhost',
-        port,
-        launch: {
-          command: 'bundleVisualizer.startMcpServer'
-        }
-      } as const;
-
-      const text = JSON.stringify(def, null, 2);
-      await vscode.env.clipboard.writeText(text);
-      vscode.window.showInformationMessage('MCP server definition copied to clipboard. Paste it into Configure Tools or your settings.');
-    } catch (err: any) {
-      console.error('Failed to copy MCP server definition:', err);
-      vscode.window.showErrorMessage('Failed to copy MCP server definition: ' + (err?.message ?? String(err)));
-    }
-  });
-  disposables.push(copyCmd);
-
   // Ensure we close the server on extension deactivation
   disposables.push({ dispose: () => { try { server.close?.(); } catch {} } });
 
   // Start the MCP server automatically at activation
   await startMcpServer();
 
-  return disposables;
+  return {
+    disposables,
+    startMcpServer,
+    stopMcpServer: async () => {
+      if (!httpServer && !transport) {
+        vscode.window.showInformationMessage('MCP server is not running.');
+        return;
+      }
+      try { await server.close(); } catch (err) { console.warn('Error closing MCP server:', err); }
+      try {
+        await new Promise<void>((resolve, reject) => {
+          if (!httpServer) { return resolve(); }
+          httpServer.close((err) => err ? reject(err) : resolve());
+        });
+      } catch (err) {
+        console.warn('Error closing HTTP server:', err);
+      }
+      httpServer = undefined;
+      transport = undefined;
+      transportPort = undefined;
+      vscode.window.showInformationMessage('MCP server stopped.');
+    },
+    copyMcpDefinition: async () => {
+      try {
+        const config = vscode.workspace.getConfiguration(PACKAGE_NAME);
+        const port = config.get<number>('mcpPort') || 5215;
+
+        const def = {
+          id: 'bundle-visualizer-built-in',
+          label: 'Bundle Visualizer (built-in)',
+          host: 'localhost',
+          port,
+          launch: {
+            command: 'bundleVisualizer.startMcpServer'
+          }
+        } as const;
+
+        const text = JSON.stringify(def, null, 2);
+        await vscode.env.clipboard.writeText(text);
+        vscode.window.showInformationMessage('MCP server definition copied to clipboard. Paste it into Configure Tools or your settings.');
+      } catch (err: any) {
+        console.error('Failed to copy MCP server definition:', err);
+        vscode.window.showErrorMessage('Failed to copy MCP server definition: ' + (err?.message ?? String(err)));
+      }
+    },
+  };
 }

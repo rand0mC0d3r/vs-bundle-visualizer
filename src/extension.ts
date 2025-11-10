@@ -4,17 +4,15 @@ import { BundleVisualizerProvider } from './webview';
 
 export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri);
-
-  const mcpDisposables = await setupMcp(context);
+  const mcp = await setupMcp(context);
 
   context.subscriptions.push(
-    ...mcpDisposables,
-    vscode.commands.registerCommand('bundleVisualizer.show', () => {
-      provider.show();
-    }),
-    vscode.commands.registerCommand('bundleVisualizer.refresh', () => {
-      provider.refresh();
-    }),
+    ...mcp.disposables,
+    vscode.commands.registerCommand('bundleVisualizer.startMcpServer', () => mcp.startMcpServer()),
+    vscode.commands.registerCommand('bundleVisualizer.stopMcpServer', () => mcp.stopMcpServer()),
+    vscode.commands.registerCommand('bundleVisualizer.copyMcpDefinition', () => mcp.copyMcpDefinition()),
+    vscode.commands.registerCommand('bundleVisualizer.show', () => provider.show()),
+    vscode.commands.registerCommand('bundleVisualizer.refresh', () => provider.refresh()),
   );
 
   provider.show();
