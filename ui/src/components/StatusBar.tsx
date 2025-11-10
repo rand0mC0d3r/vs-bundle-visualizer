@@ -58,7 +58,6 @@ export const StatusBar: React.FC<StatusBarProps> = ({ bundleData, hiddenRootFold
       <div className="status-shortcuts">
         <span><span className="kbd">Ctrl+B</span> Toggle Panel</span>
         <span><span className="kbd">Ctrl+T</span> Toggle Treemap</span>
-        <span><span className="kbd">Ctrl+F</span> Filter Toggle</span>
         <span><span className="kbd">Ctrl+H</span> Hide 0B Files</span>
         <span><span className="kbd">Ctrl+S</span> Sort Direction</span>
         <span><span className="kbd">Ctrl+1/2/3</span> Sort By</span>

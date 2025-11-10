@@ -47,6 +47,9 @@ Helps identify bundle size issues, large dependencies, and optimization opportun
    - Duplicate dependencies across chunks
    - Unexpectedly large vendor libraries
    - Opportunities for code splitting or lazy loading
+4. Apply optimizations in your build config and re-analyze to measure impact
+5. Propose to update the package.json with new bundling configurations if needed
+6. Re-run the analysis to verify improvements
 
 ## Typical Analysis Workflow
 - Start with a full analysis to get the overall picture

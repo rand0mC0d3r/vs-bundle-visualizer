@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { BundleData } from '../../types';
-import { buildDependencyMap, checkNodeMatchesLibraryFilters, DependencyMap } from '../../utils/dependencyUtils';
+import { buildDependencyMap, DependencyMap } from '../../utils/dependencyUtils';
 import { formatFileSize, getFileExtension, getFileIcon, getNodeSize } from '../../utils/fileUtils';
 import { SortCriteria, SortDirection } from '../types';
 import { TreeViewBundleMainLibraries } from './TreeViewBundleMainLibraries';
@@ -41,11 +41,6 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
   const dependencyMap = useMemo((): DependencyMap => {
     return buildDependencyMap(bundleData);
   }, [bundleData]);
-
-  // Function to check if a node matches the current filters
-  const nodeMatchesFilters = (node: any, currentPath: string = ''): boolean => {
-    return checkNodeMatchesLibraryFilters(node, currentPath,libraryFilters, dependencyMap);
-  };
 
   const sortNodes = (nodes: any[]): any[] => {
     return [...nodes].sort((a, b) => {
@@ -124,11 +119,9 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
     const isSelected = selectedNode === nodeId;
     const nodeSize = getNodeSize(node, bundleData);
 
-    // Check if this is a bundle file and get dependency info using the full path
     const fullPath = nodeId; // nodeId is the full path
     const bundleInfo = dependencyMap[fullPath];
     const isBundle = !!bundleInfo;
-
 
     return (
       <div key={nodeId} className="tree-node" data-file-path={nodeId}>

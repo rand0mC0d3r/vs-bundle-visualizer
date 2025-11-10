@@ -20,6 +20,7 @@ function App() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [showSidePanel, setShowSidePanel] = useState<boolean>(true);
   const [showTreemapPanel, setShowTreemapPanel] = useState<boolean>(false);
+  const [showMainPanel, setShowMainPanel] = useState<boolean>(true);
   const [sortCriteria, setSortCriteria] = useState<SortCriteria>('filename');
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc');
   const [hiddenRootFolders, setHiddenRootFolders] = useState<Set<string>>(new Set());
@@ -249,7 +250,7 @@ function App() {
                 onScrollToFile={scrollToFileInMainContent}
               />
             )}
-            <div className={`tree-container ${showSidePanel || showTreemapPanel ? 'with-sidebar' : ''}`}>
+            {showMainPanel && <div className={`tree-container ${showSidePanel || showTreemapPanel ? 'with-sidebar' : ''}`}>
               <TreeView
                 bundleData={bundleData}
                 expandedNodes={expandedNodes}
@@ -264,7 +265,7 @@ function App() {
                 onAddLibraryFilter={addLibraryFilter}
                 onRemoveLibraryFilter={removeLibraryFilter}
               />
-            </div>
+            </div>}
           </div>
         ) : (
           <div className="loading">

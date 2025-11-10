@@ -72,10 +72,6 @@ export const useKeyboardShortcuts = ({
             event.preventDefault();
             onChangeSortCriteria('fileSize');
             break;
-          case 'f':
-            event.preventDefault();
-            onToggleRootFolderVisibility();
-            break;
           case 'h':
             event.preventDefault();
             onToggleZeroByteFiles();

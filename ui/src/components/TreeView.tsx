@@ -131,7 +131,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
       {Object.entries(sortedGroupedFiles).map(([folderName, files]: [string, any]) => <div key={folderName} className="tree-root">
           <div className="tree-root-header">
             <div className="tree-root-title">
-              {folderName}
+              📂 {folderName}
             </div>
             <div className="tree-root-stats">
               <span className="tree-root-count">
