@@ -87,7 +87,7 @@
 .toolbar-section {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   padding: 0 8px;
   border-left: 1px solid var(--vscode-panel-border);
 }

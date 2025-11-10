@@ -2,6 +2,7 @@ import React from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { isDevelopmentMode } from '../mockApi';
 import { BundleData, McpServerStatus } from '../types';
+import { MiniToolbar } from './Header/MiniToolbar';
 import { SortCriteria, SortDirection } from './types';
 
 const sortItems = [
@@ -84,7 +85,7 @@ export const Header: React.FC<HeaderProps> = ({
     {
       action: startMCP,
       disabled: mcpStatus.isRunning,
-      isVisible: !mcpStatus.isRunning,
+      isVisible: mcpStatus.isRunning,
       label: 'Start MCP',
       name: 'startMCP',
       title: 'Start MCP server',
@@ -92,10 +93,45 @@ export const Header: React.FC<HeaderProps> = ({
     {
       action: stopMCP,
       disabled: !mcpStatus.isRunning,
-      isVisible: mcpStatus.isRunning,
+      isVisible: !mcpStatus.isRunning,
       label: 'Stop MCP',
       name: 'stopMCP',
       title: 'Stop MCP server',
+    }
+  ]
+
+  const visualizationItems = [
+    {
+        action: onExpandAll,
+        disabled: false,
+        isVisible: false,
+        label: 'Expand All',
+        name: 'expandAll',
+        title: 'Expand all folders',
+    },
+    {
+        action: onCollapseAll,
+        disabled: false,
+        isVisible: false,
+        label: 'Collapse All',
+        name: 'collapseAll',
+        title: 'Collapse all folders',
+    },
+    {
+        action: onToggleZeroByteFiles,
+        disabled: false,
+        isVisible: hideZeroByteFiles,
+        label: hideZeroByteFiles ? 'Show 0B Files' : 'Hide 0B Files',
+        name: 'toggleZeroByteFiles',
+        title: 'Toggle visibility of zero-byte files',
+    },
+    {
+        action: onRefresh,
+        disabled: false,
+        isVisible: false,
+        label: 'Refresh',
+        name: 'refresh',
+        title: 'Refresh bundle data',
     }
   ]
 
@@ -109,19 +145,8 @@ export const Header: React.FC<HeaderProps> = ({
           <span className="toolbar-label">Bundle files:</span>
           <span className="toolbar-value">{filesToRender.length}</span>
         </div>
-         <div className="toolbar-section">
-          {panelsItems.map(item => (
-            <button
-              key={item.name}
-              className={`toolbar-button ${item.isVisible ? 'active' : ''}`}
-              onClick={item.action}
-              disabled={item.disabled}
-              title={item.title}
-            >
-            {item.label}
-          </button>
-          ))}
-        </div>
+
+        <MiniToolbar items={panelsItems} />
       </div>
 
       <div className="toolbar">
@@ -160,55 +185,14 @@ export const Header: React.FC<HeaderProps> = ({
           </div>
         )}
 
-        <div className="toolbar-section">
-          <button
-            className="toolbar-button"
-            onClick={onExpandAll}
-            title="Expand all folders"
-          >
-            Expand All
-          </button>
-          <button
-            className="toolbar-button"
-            onClick={onCollapseAll}
-            title="Collapse all folders"
-          >
-            Collapse All
-          </button>
-          <button
-            className={`toolbar-button ${hideZeroByteFiles ? 'active' : ''}`}
-            onClick={onToggleZeroByteFiles}
-            title="Hide files with 0B size and empty folders"
-          >
-            {hideZeroByteFiles ? 'Show 0B Files' : 'Hide 0B Files'}
-          </button>
-          <button
-            className="toolbar-button"
-            onClick={onRefresh}
-            title="Refresh bundle data"
-          >
-            Refresh
-          </button>
-        </div>
+        <MiniToolbar items={visualizationItems} />
 
-        <div className="toolbar-section">
-            <span
-              className={`mcp-status-indicator ${mcpStatus.isRunning ? 'running' : 'stopped'}`}
-              title={mcpStatus.isRunning ? `MCP Server Running on port ${mcpStatus.port}` : 'MCP Server Stopped'}
-            />
-
-            {mcpItems.map(item => (
-              <button
-                key={item.name}
-                className="toolbar-button"
-                onClick={item.action}
-                title={item.title}
-                disabled={item.disabled}
-              >
-                {item.label}
-              </button>
-            ))}
-        </div>
+        <MiniToolbar items={mcpItems} position='start'>
+          <span
+            className={`mcp-status-indicator ${mcpStatus.isRunning ? 'running' : 'stopped'}`}
+            title={mcpStatus.isRunning ? `MCP Server Running on port ${mcpStatus.port}` : 'MCP Server Stopped'}
+          />
+        </MiniToolbar>
       </div>
     </div>
   );
