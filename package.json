@@ -16,7 +16,7 @@
     "type": "git",
     "url": "https://github.com/rand0mC0d3r/vs-bundle-visualizer"
   },
-  "version": "0.0.1",
+  "version": "0.0.2",
   "engines": {
     "vscode": "^1.105.0"
   },
@@ -60,8 +60,7 @@
       {
         "command": "bundleVisualizer.stopMcpServer",
         "title": "Bundle Visualizer: Stop built-in MCP server"
-      }
-      ,
+      },
       {
         "command": "bundleVisualizer.copyMcpDefinition",
         "title": "Bundle Visualizer: Copy built-in MCP server definition"
@@ -81,8 +80,7 @@
           "default": "dist/stats.json",
           "description": "Path to the bundle stats JSON file relative to workspace root.",
           "scope": "resource"
-        }
-        ,
+        },
         "bundleVisualizer.mcpPort": {
           "type": "number",
           "default": 5215,
