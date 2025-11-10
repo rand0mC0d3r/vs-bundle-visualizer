@@ -613,7 +613,7 @@
 .side-panel {
   width: 600px;
   min-width: 250px;
-  max-width: 600px;
+  max-width: 900px;
   border-right: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-sideBar-background, var(--vscode-panel-background));
   display: flex;
