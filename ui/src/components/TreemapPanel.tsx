@@ -30,17 +30,18 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders, 'filename', 'asc', libraryFilters);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-  const [containerSize, setContainerSize] = useState({ width: 800, height: 600 });
+  const [containerSize, setContainerSize] = useState({ width: 1200, height: 600 });
+  const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
 
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const ro = new ResizeObserver(() => {
-      setContainerSize({ width: el.clientWidth || 800, height: el.clientHeight || 600 });
+      setContainerSize({ width: el.clientWidth || 1200, height: el.clientHeight || 600 });
     });
     ro.observe(el);
     // initialize
-    setContainerSize({ width: el.clientWidth || 800, height: el.clientHeight || 600 });
+    setContainerSize({ width: el.clientWidth || 1200, height: el.clientHeight || 600 });
     return () => ro.disconnect();
   }, []);
 
@@ -82,7 +83,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         files.push({
           name: node.name,
           size: getNodeSize(node),
-          originalPath: currentPath.split(".js")[0] + '.js',
+          originalPath: currentPath.split('.js')[0] + '.js',
           fullPath: currentPath ? `${currentPath}/${node.name}` : node.name
         });
       }
@@ -186,119 +187,126 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   };
 
   const renderTreemap = (folder: FolderNode): JSX.Element => {
-    const totalSize = folder.totalSize;
+    // We'll create a grouped global layout:
+    // 1) collect all visible files and group them by top-level folder
+    // 2) for each top-level folder, potpack its files to get local boxes
+    // 3) potpack the folder boxes to get global positions
+    // 4) scale everything to fit the measured container
 
-    // Function to collapse single-child wrapper folders
-  const collapseFolders = (folderData: FolderNode): FolderNode => {
-      // If this folder has only one child folder and no files, collapse it
-      if (folderData.children.length === 1 && folderData.files.length === 0) {
-        const child = folderData.children[0];
-        const collapsedChild = collapseFolders(child);
-        return {
-          ...collapsedChild,
-          name: folderData.name ? `${folderData.name}/${collapsedChild.name}` : collapsedChild.name,
-          path: folderData.path || collapsedChild.path,
-          originalPath: collapsedChild.originalPath || collapsedChild.path // Preserve the original path for dependency map matching
-        };
-      }
+    // collect all files with their top-level folder
+    const filesList: Array<{ name: string; size: number; fullPath: string; rootFolder: string; parentFolder: string }> = [];
 
-      // Otherwise, recursively collapse children
-      return {
-        ...folderData,
-        children: folderData.children.map(child => collapseFolders(child))
-      };
+    const walk = (node: FolderNode, parentPath: string) => {
+      const path = node.path || parentPath;
+      node.files.forEach(f => {
+        const firstSlash = f.fullPath.indexOf('/');
+        const top = firstSlash > 0 ? f.fullPath.substring(0, firstSlash) : '(root)';
+        filesList.push({ name: f.name, size: f.size, fullPath: f.fullPath, rootFolder: top, parentFolder: path });
+      });
+      node.children.forEach(c => walk(c, path));
     };
 
-    const renderFolder = (folderData: FolderNode, depth: number = 0): JSX.Element => {
-      if (folderData.totalSize === 0) {
-        return <></>;
-      }
+    walk(folder, '');
 
-      const collapsed = collapseFolders(folderData);
-      const allFiles = hideZeroByteFiles
-        ? collapsed.files.filter(file => file.size > 0)
-        : [...collapsed.files];
-      const allFolders = collapsed.children.filter(child => child.totalSize > 0);
+    // group by rootFolder
+    const groups = new Map<string, typeof filesList>();
+    filesList.forEach(f => {
+      if (!groups.has(f.rootFolder)) groups.set(f.rootFolder, [] as any);
+      groups.get(f.rootFolder)!.push(f);
+    });
 
-      // Sort by size for better layout
-      allFiles.sort((a, b) => b.size - a.size);
-      allFolders.sort((a, b) => b.totalSize - a.totalSize);
+    // pack each group's files locally
+    const folderBoxes: Array<any> = [];
+    const folderMeta: Record<string, any> = {};
 
-      // Don't show folder wrapper if it's just the root or if it only has files and no meaningful structure
+    groups.forEach((groupFiles, folderName) => {
+      // create boxes scaled by file.size
+      const minSide = 18;
+      const targetArea = Math.max(4000, groupFiles.reduce((s, f) => s + f.size, 0));
+      const sideScale = Math.sqrt(targetArea) / Math.max(1, Math.sqrt(groupFiles.length || 1));
 
-      // Use potpack to create a packed layout for files in this folder.
-      // Measure container size from the outer panel (fallbacks provided).
-      // Heuristic: give this folder a packing area proportional to its size.
-      const containerWidth = containerSize.width || 800;
-      const containerHeight = containerSize.height || 600;
-      const containerArea = Math.max(1, containerWidth * containerHeight);
-      const folderArea = Math.max(2000, (collapsed.totalSize / Math.max(1, totalSize)) * containerArea);
-      const packSide = Math.max(150, Math.sqrt(folderArea));
-
-      // Prepare boxes (square tiles) proportional to file sizes within this folder
-      const minSize = 20;
-      const boxes: Array<any> = allFiles.map(file => {
-        // area proportional to file size within the collapsed folder
-        const area = Math.max(1, (file.size / Math.max(1, collapsed.totalSize)) * (packSide * packSide));
-        const side = Math.max(minSize, Math.sqrt(area));
-        return { w: side, h: side, meta: file };
+      const boxes = groupFiles.map(f => {
+        const area = Math.max(1, (f.size / Math.max(1, groupFiles.reduce((s, x) => s + x.size, 0))) * (sideScale * sideScale * groupFiles.length));
+        const side = Math.max(minSide, Math.sqrt(area));
+        return { w: side, h: side, meta: f };
       });
 
-      const packed = boxes.length > 0 ? potpack(boxes) : { w: packSide, h: packSide, fill: 0 };
-      const scale = Math.min(packSide / Math.max(1, packed.w), packSide / Math.max(1, packed.h), 1);
+      const packed = boxes.length > 0 ? potpack(boxes) : { w: Math.max(150, sideScale), h: Math.max(150, sideScale), fill: 0 };
 
-      return (
-        <div className={'treemap-folder'} key={collapsed.path}>
-          <div style={{ position: 'relative', width: `${Math.round(packSide)}px`, height: `${Math.round(packSide)}px` }}>
-            {allFolders.map((subfolder) => renderFolder(subfolder, depth + 1))}
-            {boxes.map((box) => {
-              const file = box.meta;
-              const x = Math.round((box.x || 0) * scale);
-              const y = Math.round((box.y || 0) * scale);
-              const w = Math.round(box.w * scale);
-              const h = Math.round(box.h * scale);
-              const baseColor = getFileColor(file.name);
-              const lightColor = baseColor + '80';
+      folderBoxes.push({ w: packed.w + 10, h: packed.h + 10, meta: { folderName, boxes, packed } });
+      folderMeta[folderName] = { boxes, packed };
+    });
 
-              return (
-                <div
-                  key={file.fullPath}
-                  className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''}`}
-                  style={{
-                    position: 'absolute',
-                    left: `${x}px`,
-                    top: `${y}px`,
-                    width: `${w}px`,
-                    height: `${h}px`,
-                    backgroundColor: lightColor,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '2px',
-                    overflow: 'hidden'
-                  }}
-                  onClick={() => onScrollToFile(file.fullPath)}
-                  title={`${file.name} - ${formatFileSize(file.size)}`}
-                >
-                  <div className="treemap-file-icon">{getFileIcon(file.name, false)}</div>
-                  <div className="treemap-file-size">{formatFileSize(file.size)}</div>
-                </div>
-              );
-            })}
+    // pack folders globally
+    const packedFolders = folderBoxes.length > 0 ? potpack(folderBoxes) : { w: 800, h: 600, fill: 0 };
+
+    const scale = Math.min(containerSize.width / Math.max(1, packedFolders.w), containerSize.height / Math.max(1, packedFolders.h), 1);
+
+    // Collect file elements with absolute positions
+    const fileElements: JSX.Element[] = [];
+
+    folderBoxes.forEach((fb) => {
+      const folderX = (fb.x || 0) * scale;
+      const folderY = (fb.y || 0) * scale;
+      const { meta } = fb;
+      const { boxes, packed } = meta as any;
+
+      const innerScale = Math.min((fb.w - 10) / Math.max(1, packed.w), (fb.h - 10) / Math.max(1, packed.h), 1) * scale;
+
+      boxes.forEach((b: any) => {
+        const file = b.meta;
+        const x = Math.round((b.x || 0) * innerScale + folderX + 5);
+        const y = Math.round((b.y || 0) * innerScale + folderY + 5);
+        const w = Math.max(10, Math.round(b.w * innerScale));
+        const h = Math.max(10, Math.round(b.h * innerScale));
+        const baseColor = getFileColor(file.name);
+        const lightColor = baseColor + '80';
+
+        fileElements.push(
+          <div
+            key={file.fullPath}
+            className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''} ${hoveredFolder === file.rootFolder ? 'hovered-folder' : ''}`}
+            style={{
+              position: 'absolute',
+              left: `${x}px`,
+              top: `${y}px`,
+              width: `${w}px`,
+              height: `${h}px`,
+              backgroundColor: lightColor,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '2px',
+              overflow: 'hidden',
+              cursor: 'pointer'
+            }}
+            onMouseEnter={() => setHoveredFolder(file.rootFolder)}
+            onMouseLeave={() => setHoveredFolder(null)}
+            onClick={() => onScrollToFile(file.fullPath)}
+            title={`${file.fullPath} - ${formatFileSize(file.size)}`}
+          >
+            <div className="treemap-file-icon">{getFileIcon(file.name, false)}</div>
+            <div className="treemap-file-size">{formatFileSize(file.size)}</div>
           </div>
-        </div>
-      );
-    };
+        );
+      });
+    });
 
-    return renderFolder(folder, 0);
+    return (
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        {fileElements}
+      </div>
+    );
   };
 
   const folderStructure = buildFolderStructure(bundleData, filesToRender);
 
-  return <>
+  return (
     <ResizablePanel title="File Size Visualization">
+      <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
         {renderTreemap(folderStructure)}
+      </div>
     </ResizablePanel>
-  </>
+  );
 };
