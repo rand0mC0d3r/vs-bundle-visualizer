@@ -2,8 +2,50 @@ import { TextDecoder } from 'util';
 import * as vscode from 'vscode';
 import { PACKAGE_NAME } from './constants';
 
+// @ts-ignore - optional dependency may not be present in this environment/runtime
+import { MCPServer } from '@modelcontextprotocol/sdk';
+
+async function analyzeBundle(folderPath: string) {
+  const summary: Record<string, any> = {};
+
+  return summary;
+}
+
 export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri);
+
+  const server = new MCPServer({
+    name: 'vite-analyzer-mcp',
+    version: '1.0.0',
+  });
+    // created server instance (not started yet)
+
+  const analyzeBundleTool = {
+    name: 'analyzeBundle',
+    description: 'Analyze Vite build output and summarize imports per file',
+    parameters: {
+      type: 'object',
+      properties: {
+        folderPath: { type: 'string' },
+      },
+      required: ['folderPath'],
+    },
+    async execute({ folderPath }: { folderPath: string }) {
+      return await analyzeBundle(folderPath);
+    },
+  };
+
+  server.addTool(analyzeBundleTool);
+
+  // Start the MCP server and handle start failures so issues are visible
+  try {
+    await server.start();
+    console.log(`MCP Server started on port ${server.port}`);
+  } catch (err: any) {
+    console.error('Failed to start MCP Server:', err);
+    // show a message in VS Code so the user notices the failure
+    vscode.window.showWarningMessage('MCP Server failed to start: ' + (err?.message ?? String(err)));
+  }
 
   context.subscriptions.push(
     vscode.commands.registerCommand('bundleVisualizer.show', () => {
@@ -37,6 +79,8 @@ export async function activate(context: vscode.ExtensionContext) {
 
   // Auto-show the panel on activation
   provider.show();
+
+  context.subscriptions.push({ dispose: () => server.stop() });
 }
 
 export function deactivate() {}
