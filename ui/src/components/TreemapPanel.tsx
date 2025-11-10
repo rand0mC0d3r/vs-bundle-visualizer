@@ -1,3 +1,4 @@
+import potpack from 'potpack';
 import React from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
@@ -227,9 +228,23 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         };
       }).filter(item => item.willShowHeader);
 
+
+      console.log(allFiles, allFolders)
+      let allFilesBoxes = allFiles.map(file => {
+              const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
+              const minSize = 20; // Minimum tile size in pixels
+              const maxSize = 200; // Maximum tile size in pixels
+              const size = Math.max(minSize, Math.min(maxSize, Math.sqrt(sizeRatio) * 1000));
+        return {
+          w: size  * 1.125,
+          h: size  * 1.125
+        }
+      })
+      const { w, h, fill } = potpack(allFilesBoxes);
       // const isLast = !showFolderHeader
       // const isPrelast = siblingInfo?.isLast ?? false;
 
+      console.log('pat box', w, h, fill, allFilesBoxes)
       const folderName = (collapsed.path ? collapsed.path : collapsed.name)
 
       return (
@@ -241,9 +256,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
             </div> */}
           {/* )} */}
           <div style={{
+              position: "relative",
               display:  "flex",
-              // gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-              // gap: '10px',
               flexWrap: "wrap",
               gap: "4px",
               alignItems: "flex-start",
@@ -258,7 +272,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
 
               return renderFolder(subfolder, depth + 1, siblingInfo);
             })}
-            {allFiles.map(file => {
+            {allFiles.map((file, i) => {
               const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
               const minSize = 20; // Minimum tile size in pixels
               const maxSize = 200; // Maximum tile size in pixels
@@ -273,6 +287,9 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   key={file.fullPath}
                   className={`treemap-file ${selectedNode === file.fullPath ? 'selected' : ''}`}
                   style={{
+                    // position: 'absolute',
+                    // left: `${allFilesBoxes[i].x}px`,
+                    // top: `${allFilesBoxes[i].y}px`,
                     width: `${size * 1.125}px`,
                     height: `${size * 1.125}px`,
                     backgroundColor: lightColor,
