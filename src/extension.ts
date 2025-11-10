@@ -22,7 +22,7 @@ export async function activate(context: vscode.ExtensionContext) {
       const doc = editor.document;
       const filePath = doc.uri.fsPath;
 
-      const question = `Explain the import chain for this file: ${filePath}`;
+      const question = `Explain the import chain for this file: ${filePath}. You also can use from /dist/stats.json the bundle structure to help you understand the context. Provide a concise explanation suitable for a developer familiar with JavaScript/TypeScript and bundlers.`;
 
       const codeSnippet = doc.getText().slice(0, 5000); // limit to 5k chars
       const prompt = `${question}\n\nHere is the file content (truncated):\n${codeSnippet}`;
