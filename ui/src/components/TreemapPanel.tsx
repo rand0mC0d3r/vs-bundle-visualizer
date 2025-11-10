@@ -371,7 +371,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {t.originalPath || t.name}
+                    {t.name}
                   </div>
                   {/* <div className="treemap-file-icon">{getFileIcon(t.name, false)}</div> */}
                   <div className="treemap-file-size">{formatFileSize(t.size)}</div>
