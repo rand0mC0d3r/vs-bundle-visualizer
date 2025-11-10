@@ -1,6 +1,6 @@
 import React from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
-import { BundleData } from '../types';
+import { BundleData, VSCodeAPI } from '../types';
 import { TreeViewRenderNode } from './TreeView/TreeViewRenderNode';
 import { SortCriteria, SortDirection } from './types';
 
@@ -13,6 +13,7 @@ interface TreeViewProps {
   hideZeroByteFiles: boolean;
   hiddenRootFolders: Set<string>;
   libraryFilters: string[];
+  vscodeApi: VSCodeAPI;
   onToggleNode: (nodeId: string) => void;
   onSelectNode: (nodeId: string) => void;
   onAddLibraryFilter: (library: string) => void;
@@ -28,6 +29,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
   hideZeroByteFiles,
   hiddenRootFolders,
   libraryFilters,
+  vscodeApi,
   onToggleNode,
   onSelectNode,
   onAddLibraryFilter,
@@ -139,7 +141,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
               </span>
             </div>
           </div>
-          {files.map((rootNode: any) => <TreeViewRenderNode key={rootNode.name || rootNode.id} rootNode={rootNode} bundleData={bundleData} expandedNodes={expandedNodes} selectedNode={selectedNode} sortCriteria={sortCriteria} sortDirection={sortDirection} hideZeroByteFiles={hideZeroByteFiles} libraryFilters={libraryFilters} onToggleNode={onToggleNode} onSelectNode={onSelectNode} onAddLibraryFilter={onAddLibraryFilter} onRemoveLibraryFilter={onRemoveLibraryFilter} />)}
+          {files.map((rootNode: any) => <TreeViewRenderNode key={rootNode.name || rootNode.id} rootNode={rootNode} bundleData={bundleData} expandedNodes={expandedNodes} selectedNode={selectedNode} sortCriteria={sortCriteria} sortDirection={sortDirection} hideZeroByteFiles={hideZeroByteFiles} libraryFilters={libraryFilters} vscodeApi={vscodeApi} onToggleNode={onToggleNode} onSelectNode={onSelectNode} onAddLibraryFilter={onAddLibraryFilter} onRemoveLibraryFilter={onRemoveLibraryFilter} />)}
         </div>)}
     </div>}
 

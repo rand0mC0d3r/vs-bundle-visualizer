@@ -186,6 +186,7 @@ function App() {
   return (
     <div className={`app theme-${theme.kind === 1 ? 'light' : 'dark'}`}>
       <Header
+        {...{ showMainPanel }}
         bundleData={bundleData}
         libraryFilters={libraryFilters}
         showSidePanel={showSidePanel}
@@ -198,6 +199,7 @@ function App() {
         mcpStatus={mcpStatus}
         onToggleSidePanel={() => setShowSidePanel(!showSidePanel)}
         onToggleTreemapPanel={() => setShowTreemapPanel(!showTreemapPanel)}
+        onToggleMainPanel={() => setShowMainPanel(!showMainPanel)}
         onToggleZeroByteFiles={() => setHideZeroByteFiles(!hideZeroByteFiles)}
         onSortCriteriaChange={setSortCriteria}
         onSortDirectionChange={setSortDirection}
@@ -260,6 +262,7 @@ function App() {
                 hideZeroByteFiles={hideZeroByteFiles}
                 hiddenRootFolders={hiddenRootFolders}
                 libraryFilters={libraryFilters}
+                vscodeApi={vscodeApi}
                 onToggleNode={toggleNode}
                 onSelectNode={selectNode}
                 onAddLibraryFilter={addLibraryFilter}

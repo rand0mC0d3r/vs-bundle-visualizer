@@ -72,7 +72,7 @@ export class BundleVisualizerProvider {
     });
 
     this.panel.webview.onDidReceiveMessage(
-      message => {
+      async message => {
         switch (message.command) {
           case 'ready':
             this.refresh();
@@ -91,6 +91,9 @@ export class BundleVisualizerProvider {
           case 'stopMcp':
             vscode.commands.executeCommand('bundleVisualizer.stopMcpServer');
             break;
+          case 'openFile':
+            await this.openFile(message.filePath);
+            break;
         }
       }
     );
@@ -99,6 +102,22 @@ export class BundleVisualizerProvider {
     this.refresh();
     this.sendTheme();
     this.sendMcpStatus();
+  }
+
+  private async openFile(filePath: string) {
+    const workspaceFolders = vscode.workspace.workspaceFolders;
+    if (!workspaceFolders?.length) {
+      vscode.window.showErrorMessage('No workspace folder found');
+      return;
+    }
+
+    try {
+      const fileUri = vscode.Uri.joinPath(workspaceFolders[0].uri, filePath);
+      const document = await vscode.workspace.openTextDocument(fileUri);
+      await vscode.window.showTextDocument(document);
+    } catch (err: any) {
+      vscode.window.showErrorMessage(`Failed to open file: ${err.message}`);
+    }
   }
 
   public async refresh() {

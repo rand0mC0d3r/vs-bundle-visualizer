@@ -33,6 +33,8 @@ interface HeaderProps {
   onRefresh: () => void;
   startMCP: () => void;
   stopMCP: () => void;
+  showMainPanel: boolean;
+  onToggleMainPanel: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -57,6 +59,8 @@ export const Header: React.FC<HeaderProps> = ({
   onRefresh,
   startMCP,
   stopMCP,
+  showMainPanel,
+  onToggleMainPanel
 }) => {
   const { filesToRender } = bundleData
     ? useFilteredNodes(bundleData, hiddenRootFolders, sortCriteria, sortDirection, libraryFilters)
@@ -78,6 +82,14 @@ export const Header: React.FC<HeaderProps> = ({
       label: showTreemapPanel ? 'Hide 🌳' : 'Show 🌳',
       name: 'treemapPanel',
       title: 'Toggle treemap panel',
+    },
+    {
+      action: onToggleMainPanel,
+      disabled: false,
+      isVisible: showMainPanel,
+      label: showMainPanel ? 'Hide Main Panel' : 'Show Main Panel',
+      name: 'mainPanel',
+      title: 'Toggle main panel',
     }
   ]
 

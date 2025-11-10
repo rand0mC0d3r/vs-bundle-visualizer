@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { BundleData } from '../../types';
+import { BundleData, VSCodeAPI } from '../../types';
 import { buildDependencyMap, DependencyMap } from '../../utils/dependencyUtils';
 import { formatFileSize, getFileExtension, getFileIcon, getNodeSize } from '../../utils/fileUtils';
 import { SortCriteria, SortDirection } from '../types';
@@ -16,6 +16,7 @@ interface TreeViewRenderNodeProps {
   sortDirection: SortDirection;
   hideZeroByteFiles: boolean;
   libraryFilters: string[];
+  vscodeApi: VSCodeAPI;
   onToggleNode: (nodeId: string) => void;
   onSelectNode: (nodeId: string) => void;
   onAddLibraryFilter: (library: string) => void;
@@ -31,6 +32,7 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
   sortDirection,
   hideZeroByteFiles,
   libraryFilters,
+  vscodeApi,
   onToggleNode,
   onSelectNode,
   onAddLibraryFilter,
@@ -149,7 +151,15 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
               {getFileIcon(node.name, isFolder)}
             </div>
 
-            <div className={`tree-label ${isFolder ? 'folder' : ''}`} style={{ display: 'flex', flexDirection: 'column', flexWrap: 'wrap' }}>
+            <div
+              onClick={(e) => {
+                if(bundleInfo) return;
+                e.stopPropagation();
+                vscodeApi.postMessage({ command: 'openFile', filePath: node.name });
+              }}
+              className={`tree-label ${isFolder ? 'folder' : ''}`}
+              style={{ display: 'flex', flexDirection: 'column', flexWrap: 'wrap' }}
+            >
               {node.name}
               {bundleInfo && <TreeViewDependencyVendor {...{ bundleInfo }} />}
             </div>

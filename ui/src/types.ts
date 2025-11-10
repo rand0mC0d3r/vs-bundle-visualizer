@@ -43,6 +43,7 @@ export interface McpServerStatus {
 export interface VSCodeMessage {
   command: string;
   data?: any;
+  filePath?: string;
 }
 
 export interface VSCodeAPI {
