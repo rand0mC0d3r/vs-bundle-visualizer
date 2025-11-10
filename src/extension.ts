@@ -4,17 +4,10 @@ import { PACKAGE_NAME } from './constants';
 
 import { setupMcp } from './mcp';
 
-async function analyzeBundle(folderPath: string) {
-  const summary: Record<string, any> = {};
-
-  return summary;
-}
-
 export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri);
 
-  // Setup MCP server, tools and commands in a separate module to keep this file small.
-  const mcpDisposables = setupMcp(context, analyzeBundle);
+  const mcpDisposables = setupMcp(context);
   mcpDisposables.forEach(d => context.subscriptions.push(d));
 
   context.subscriptions.push(
@@ -24,33 +17,9 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('bundleVisualizer.refresh', () => {
       provider.refresh();
     }),
-    vscode.commands.registerCommand('bundleVisualizer.askCopilot', async (uri: vscode.Uri) => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) {
-        vscode.window.showWarningMessage('No file is currently open.');
-        return;
-      }
-
-      const doc = editor.document;
-      const filePath = doc.uri.fsPath;
-
-      const question = `Explain the import chain for this file: ${filePath}. You also can use from /dist/stats.json the bundle structure to help you understand the context. Provide a concise explanation suitable for a developer familiar with JavaScript/TypeScript and bundlers.`;
-
-      const codeSnippet = doc.getText().slice(0, 5000); // limit to 5k chars
-      const prompt = `${question}\n\nHere is the file content (truncated):\n${codeSnippet}`;
-
-      await vscode.env.clipboard.writeText(prompt);
-      vscode.commands.executeCommand('workbench.action.chat.open');
-      vscode.window.showInformationMessage(
-        '📋 Copied your prompt. Paste it in Copilot Chat manually (API not public yet).'
-      );
-    })
   );
 
-  // Auto-show the panel on activation
   provider.show();
-
-  // Note: MCP cleanup is handled inside `setupMcp` and its returned disposables.
 }
 
 export function deactivate() {}
@@ -61,10 +30,6 @@ class BundleVisualizerProvider {
 
   constructor(extensionUri: vscode.Uri) {
     this.extensionUri = extensionUri;
-  }
-
-  public askAboutFile(uri: vscode.Uri) {
-    vscode.commands.executeCommand('bundleVisualizer.askCopilot', uri);
   }
 
   public show() {

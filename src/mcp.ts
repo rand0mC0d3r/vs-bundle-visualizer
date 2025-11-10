@@ -5,9 +5,15 @@ import * as http from 'http';
 import * as vscode from 'vscode';
 import { PACKAGE_NAME } from './constants';
 
+async function analyzeBundle(folderPath: string) {
+  const summary: Record<string, any> = {};
+
+  return summary;
+}
+
 export type AnalyzeFn = (folderPath: string) => Promise<Record<string, any>>;
 
-export function setupMcp(context: vscode.ExtensionContext, analyzeBundle: AnalyzeFn) {
+export function setupMcp(context: vscode.ExtensionContext) {
   const disposables: vscode.Disposable[] = [];
 
   // MCP runtime state for in-extension transport
