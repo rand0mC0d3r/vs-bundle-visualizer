@@ -1,7 +1,7 @@
 import React from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { isDevelopmentMode } from '../mockApi';
-import { BundleData } from '../types';
+import { BundleData, McpServerStatus } from '../types';
 import { SortCriteria, SortDirection } from './types';
 
 interface HeaderProps {
@@ -14,6 +14,7 @@ interface HeaderProps {
   sortDirection: SortDirection;
   hiddenRootFolders: Set<string>;
   rootFolders: string[];
+  mcpStatus: McpServerStatus;
   onToggleSidePanel: () => void;
   onToggleTreemapPanel: () => void;
   onToggleZeroByteFiles: () => void;
@@ -37,6 +38,7 @@ export const Header: React.FC<HeaderProps> = ({
   sortDirection,
   hiddenRootFolders,
   rootFolders,
+  mcpStatus,
   onToggleSidePanel,
   onToggleTreemapPanel,
   onToggleZeroByteFiles,
@@ -164,20 +166,28 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <div className="toolbar-section">
-          <button
-            className="toolbar-button"
-            onClick={startMCP}
-            title="Start MCP server"
-          >
-            Start MCP
-          </button>
-          <button
-            className="toolbar-button"
-            onClick={stopMCP}
-            title="Stop MCP server"
-          >
-            Stop MCP
-          </button>
+          <div className="mcp-status-container">
+            <span
+              className={`mcp-status-indicator ${mcpStatus.isRunning ? 'running' : 'stopped'}`}
+              title={mcpStatus.isRunning ? `MCP Server Running on port ${mcpStatus.port}` : 'MCP Server Stopped'}
+            />
+            <button
+              className="toolbar-button"
+              onClick={startMCP}
+              title="Start MCP server"
+              disabled={mcpStatus.isRunning}
+            >
+              Start MCP
+            </button>
+            <button
+              className="toolbar-button"
+              onClick={stopMCP}
+              title="Stop MCP server"
+              disabled={!mcpStatus.isRunning}
+            >
+              Stop MCP
+            </button>
+          </div>
         </div>
       </div>
     </div>

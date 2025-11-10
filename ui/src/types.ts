@@ -35,6 +35,11 @@ export interface VSCodeTheme {
   kind: number; // 1 = light, 2 = dark, 3 = high contrast
 }
 
+export interface McpServerStatus {
+  isRunning: boolean;
+  port?: number;
+}
+
 export interface VSCodeMessage {
   command: string;
   data?: any;

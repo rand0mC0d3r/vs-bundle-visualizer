@@ -12,6 +12,12 @@ export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri, watcher);
   const mcp = await setupMcp(context, watcher);
 
+  // Wire up MCP status to provider
+  provider.setMcpStatusGetter(mcp.getStatus);
+  mcp.onStatusChange((status) => {
+    provider.sendMcpStatus();
+  });
+
   context.subscriptions.push(
     ...mcp.disposables,
     vscode.commands.registerCommand('bundleVisualizer.startMcpServer', () => mcp.startMcpServer()),

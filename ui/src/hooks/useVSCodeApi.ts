@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { createMockVSCodeApi, isDevelopmentMode } from '../mockApi';
-import { BundleData, VSCodeAPI, VSCodeMessage, VSCodeTheme } from '../types';
+import { BundleData, McpServerStatus, VSCodeAPI, VSCodeMessage, VSCodeTheme } from '../types';
 
 declare global {
   interface Window {
@@ -12,6 +12,7 @@ export const useVSCodeApi = () => {
   const [bundleData, setBundleData] = useState<BundleData | null>(null);
   const [theme, setTheme] = useState<VSCodeTheme>({ kind: 2 });
   const [error, setError] = useState<string | null>(null);
+  const [mcpStatus, setMcpStatus] = useState<McpServerStatus>({ isRunning: false });
 
   const [vscodeApi] = useState(() => {
     // Use mock API in development mode, real API in VS Code
@@ -34,6 +35,9 @@ export const useVSCodeApi = () => {
         case 'updateTheme':
           setTheme(message.data);
           break;
+        case 'updateMcpStatus':
+          setMcpStatus(message.data);
+          break;
         case 'error':
           setError(message.data);
           setBundleData(null);
@@ -55,6 +59,7 @@ export const useVSCodeApi = () => {
     bundleData,
     theme,
     error,
+    mcpStatus,
     vscodeApi
   };
 };

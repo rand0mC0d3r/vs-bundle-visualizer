@@ -2,11 +2,13 @@ import { TextDecoder } from 'util';
 import * as vscode from 'vscode';
 import { BundleDataWatcher } from './bundleDataWatcher';
 import { PACKAGE_NAME } from './constants';
+import { McpServerStatus } from './mcp';
 
 export class BundleVisualizerProvider {
   private panel: vscode.WebviewPanel | undefined;
   private readonly extensionUri: vscode.Uri;
   private watcherDisposable: vscode.Disposable | undefined;
+  private mcpStatusGetter?: () => McpServerStatus;
 
   constructor(extensionUri: vscode.Uri, private watcher?: BundleDataWatcher) {
     this.extensionUri = extensionUri;
@@ -17,6 +19,22 @@ export class BundleVisualizerProvider {
         this.refresh();
       });
     }
+  }
+
+  public setMcpStatusGetter(getter: () => McpServerStatus) {
+    this.mcpStatusGetter = getter;
+  }
+
+  public sendMcpStatus() {
+    if (!this.panel || !this.mcpStatusGetter) {
+      return;
+    }
+
+    const status = this.mcpStatusGetter();
+    this.panel.webview.postMessage({
+      command: 'updateMcpStatus',
+      data: status
+    });
   }
 
   public askAboutFile(uri: vscode.Uri) {
@@ -59,9 +77,13 @@ export class BundleVisualizerProvider {
           case 'ready':
             this.refresh();
             this.sendTheme();
+            this.sendMcpStatus();
             break;
           case 'refresh':
             this.refresh();
+            break;
+          case 'requestMcpStatus':
+            this.sendMcpStatus();
             break;
           case 'startMcp':
             vscode.commands.executeCommand('bundleVisualizer.startMcpServer');
@@ -76,6 +98,7 @@ export class BundleVisualizerProvider {
     // Initial load
     this.refresh();
     this.sendTheme();
+    this.sendMcpStatus();
   }
 
   public async refresh() {

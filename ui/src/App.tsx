@@ -11,7 +11,7 @@ import { useVSCodeApi } from './hooks/useVSCodeApi';
 import { getRootFolders } from './utils/folderUtils';
 
 function App() {
-  const { bundleData, theme, error, vscodeApi } = useVSCodeApi();
+  const { bundleData, theme, error, mcpStatus, vscodeApi } = useVSCodeApi();
 
   // UI State
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(new Set());
@@ -194,6 +194,7 @@ function App() {
         sortDirection={sortDirection}
         hiddenRootFolders={hiddenRootFolders}
         rootFolders={rootFolders}
+        mcpStatus={mcpStatus}
         onToggleSidePanel={() => setShowSidePanel(!showSidePanel)}
         onToggleTreemapPanel={() => setShowTreemapPanel(!showTreemapPanel)}
         onToggleZeroByteFiles={() => setHideZeroByteFiles(!hideZeroByteFiles)}

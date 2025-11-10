@@ -114,10 +114,44 @@
   background-color: var(--vscode-button-hoverBackground);
 }
 
+.toolbar-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.toolbar-button:disabled:hover {
+  background-color: var(--vscode-button-background);
+}
+
 .toolbar-button.active {
   background-color: var(--vscode-button-secondaryBackground);
   color: var(--vscode-button-secondaryForeground);
   border: 1px solid var(--vscode-button-border);
+}
+
+.mcp-status-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.mcp-status-indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.mcp-status-indicator.running {
+  background-color: #4caf50;
+  box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+}
+
+.mcp-status-indicator.stopped {
+  background-color: #f44336;
+  box-shadow: 0 0 6px rgba(244, 67, 54, 0.6);
 }
 
 .toolbar-label {

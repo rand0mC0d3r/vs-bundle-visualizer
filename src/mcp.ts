@@ -9,6 +9,11 @@ import { analyzeBundleTool } from './tools/analyzeBundle';
 
 export type AnalyzeFn = (folderPath: string) => Promise<Record<string, any>>;
 
+export interface McpServerStatus {
+  isRunning: boolean;
+  port?: number;
+}
+
 export async function setupMcp(context: vscode.ExtensionContext, watcher?: BundleDataWatcher) {
   const disposables: vscode.Disposable[] = [];
 
@@ -16,6 +21,9 @@ export async function setupMcp(context: vscode.ExtensionContext, watcher?: Bundl
   let httpServer: http.Server | undefined;
   let transport: StreamableHTTPServerTransport | undefined;
   let transportPort: number | undefined;
+
+  // Status change callback
+  let statusChangeCallback: ((status: McpServerStatus) => void) | undefined;
 
   const server = new McpServer({
     name: 'vite-analyzer-mcp',
@@ -109,12 +117,22 @@ export async function setupMcp(context: vscode.ExtensionContext, watcher?: Bundl
       }});
 
       vscode.window.showInformationMessage(`MCP server listening on port ${port}`);
+
+      // Notify status change
+      if (statusChangeCallback) {
+        statusChangeCallback({ isRunning: true, port });
+      }
     } catch (err: any) {
       console.error('Failed to start MCP HTTP transport:', err);
       vscode.window.showErrorMessage('Failed to start MCP server: ' + (err?.message ?? String(err)));
       try { httpServer && httpServer.close(); } catch {}
       httpServer = undefined;
       transport = undefined;
+
+      // Notify status change
+      if (statusChangeCallback) {
+        statusChangeCallback({ isRunning: false });
+      }
     }
   }
 
@@ -145,6 +163,11 @@ export async function setupMcp(context: vscode.ExtensionContext, watcher?: Bundl
       transport = undefined;
       transportPort = undefined;
       vscode.window.showInformationMessage('MCP server stopped.');
+
+      // Notify status change
+      if (statusChangeCallback) {
+        statusChangeCallback({ isRunning: false });
+      }
     },
     copyMcpDefinition: async () => {
       try {
@@ -169,5 +192,14 @@ export async function setupMcp(context: vscode.ExtensionContext, watcher?: Bundl
         vscode.window.showErrorMessage('Failed to copy MCP server definition: ' + (err?.message ?? String(err)));
       }
     },
+    getStatus: (): McpServerStatus => {
+      return {
+        isRunning: !!httpServer,
+        port: transportPort
+      };
+    },
+    onStatusChange: (callback: (status: McpServerStatus) => void) => {
+      statusChangeCallback = callback;
+    }
   };
 }
