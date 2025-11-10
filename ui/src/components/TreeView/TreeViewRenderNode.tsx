@@ -151,13 +151,7 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
 
             <div className={`tree-label ${isFolder ? 'folder' : ''}`} style={{ display: 'flex', flexDirection: 'column', flexWrap: 'wrap' }}>
               {node.name}
-              <TreeViewBundleMainLibraries
-                bundleInfo={bundleInfo}
-                libraryFilters={libraryFilters}
-                onAddLibraryFilter={onAddLibraryFilter}
-                onRemoveLibraryFilter={onRemoveLibraryFilter}
-                uniqueAssetDependencies={uniqueAssetDependencies}
-              />
+              {bundleInfo && <TreeViewDependencyVendor {...{ bundleInfo }} />}
             </div>
           </div>
 
@@ -165,7 +159,13 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
           {bundleInfo && (
             <div className="dependency-info" >
               {bundleInfo.isVendor
-                ? <TreeViewDependencyVendor {...{ bundleInfo }} />
+                ? <TreeViewBundleMainLibraries
+                    bundleInfo={bundleInfo}
+                    libraryFilters={libraryFilters}
+                    onAddLibraryFilter={onAddLibraryFilter}
+                    onRemoveLibraryFilter={onRemoveLibraryFilter}
+                    uniqueAssetDependencies={uniqueAssetDependencies}
+                  />
                 : <TreeViewDependencyAsset
                     bundleInfo={bundleInfo}
                     dependencyMap={dependencyMap}
@@ -176,11 +176,11 @@ export const TreeViewRenderNode: React.FC<TreeViewRenderNodeProps> = ({
             </div>
           )}
 
-            {nodeSize > 0 && (
-              <div className="tree-size">
-                {formatFileSize(nodeSize)}
-              </div>
-            )}
+          {nodeSize > 0 && (
+            <div className="tree-size">
+              {formatFileSize(nodeSize)}
+            </div>
+          )}
         </div>
 
         {hasChildren && isExpanded && (

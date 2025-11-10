@@ -431,7 +431,6 @@
 }
 
 .dependency-section {
-  width: 400px;
   margin-bottom: 4px;
 }
 
@@ -445,14 +444,13 @@
 .dependency-list {
   display: flex;
   flex-wrap: wrap;
-  gap: 4px;
-  /* margin-left: 16px; */
+  gap: 6px;
 }
 
 .dependency-item {
   background: var(--vscode-badge-background, #4d4d4d);
   color: var(--vscode-badge-foreground, #ffffff);
-  padding: 2px 6px;
+  padding: 2px 4px;
   border-radius: 4px;
   font-size: 1em;
   font-family: var(--vscode-editor-font-family, 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace);
