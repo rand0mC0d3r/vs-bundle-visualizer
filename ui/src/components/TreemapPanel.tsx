@@ -409,6 +409,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   left: t.x,
                   top: t.y,
                   width: t.w,
+                  minWidth: 6,
                   height: t.h,
                   backgroundColor: lightColor,
                   display: 'flex',
