@@ -289,6 +289,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built with [VS Code Extension API](https://code.visualstudio.com/api)
 - Powered by [React](https://react.dev/) and [Vite](https://vitejs.dev/)
 - MCP support via [@modelcontextprotocol/sdk](https://github.com/modelcontextprotocol/typescript-sdk)
+- Build tools and inspiration from [webpack-bundle-analyzer](https://github.com/webpack-contrib/webpack-bundle-analyzer)
+- Aide by ChatGPT and friends
 
 ---
 

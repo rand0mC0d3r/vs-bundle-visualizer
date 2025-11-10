@@ -5,7 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.3...HEAD)
+## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.4...HEAD)
+
+## [v0.0.4](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.3...v0.0.4) - 2025-11-10
+
+### Commits
+
+- chore: release new version [`b4c8ff1`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/b4c8ff1c8b49b6fa81b2926c0608ad58b1906248)
+- Refactor code structure for improved readability and maintainability [`8347d72`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/8347d72df804fb8d5b6ac932106f4cb71dcc98d8)
 
 ## [v0.0.3](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.2...v0.0.3) - 2025-11-10
 
