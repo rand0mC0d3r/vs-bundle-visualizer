@@ -5,7 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.5...HEAD)
+## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.6...HEAD)
+
+## [v0.0.6](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.5...v0.0.6) - 2025-11-10
+
+### Commits
+
+- refactor: enhance bundle filtering logic and add usage documentation [`9facd1a`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/9facd1a4bd2b0ed6ed5e765ee84aabbf3c8ef86f)
+- feat: implement analyzeBundle tool for processing and filtering Vite build output [`bea3a43`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/bea3a435e6eee037bcfe2571cab7ae73bcf043c0)
+- feat: implement BundleDataWatcher for monitoring bundle stats file changes [`76f46f9`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/76f46f9f7297a92fa3a77d17cf2ae03f20a8b80f)
+- refactor: streamline MCP command registration and return structure in setupMcp function [`9e6487d`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/9e6487dd5961238b43c810bc18cbe68b14e9b707)
+- fix: ensure setupMcp function is asynchronous and starts MCP server on activation [`39586fe`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/39586fed80d5b08e132b3d4a49769d77e46adb10)
+- chore: release new version [`83eb62a`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/83eb62ad123630abc4741ca28b778208c0bd4041)
+- fix: correctly push MCP disposables to context subscriptions [`4e910b2`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/4e910b2689401ed2f3778296d9d5e4b5ffa1f5cb)
+- fix: include children property in analyzed bundle summary [`0a96c5c`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/0a96c5c364a80b95f65e0b67c9ec1345943e49d5)
 
 ## [v0.0.5](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.4...v0.0.5) - 2025-11-10
 
