@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.7...HEAD)
+## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.8...HEAD)
+
+## [v0.0.8](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.7...v0.0.8) - 2025-11-10
+
+### Commits
+
+- feat: integrate MCP status management and UI updates [`e4854bc`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/e4854bca857272a55e87666bb218be9629a1b7f1)
+- Refactor code structure for improved readability and maintainability [`7c023dc`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/7c023dce2ee00ad59242ef8d13ffdc34f29dca04)
+- chore: release new version [`6024aa1`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/6024aa1d3fdc997f5e0870ba55d9a9f68682fb3a)
 
 ## [v0.0.7](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.6...v0.0.7) - 2025-11-10
 
