@@ -1,4 +1,3 @@
-import potpack from 'potpack';
 import React from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
@@ -23,7 +22,13 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   hiddenRootFolders,
   onScrollToFile
 }) => {
-  const buildFolderStructure = (bundleData: BundleData): FolderNode => {
+  if (!bundleData) {
+    return null as any;
+  }
+
+  const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders, 'filename', 'asc', libraryFilters);
+
+  const buildFolderStructure = (bundleData: BundleData, filesToRender: any[]): FolderNode => {
     const root: FolderNode = {
       name: 'root',
       path: '',
@@ -32,10 +37,6 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       files: [],
       totalSize: 0
     };
-
-  const { filesToRender } = bundleData
-    ? useFilteredNodes(bundleData, hiddenRootFolders, 'asc', 'name', libraryFilters)
-    : { filesToRender: [] };
 
 
     const folderMap = new Map<string, FolderNode>();
@@ -79,23 +80,18 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       return files;
     };
 
-    // Extract all files from bundle data
-    const allFiles: Array<{ name: string; size: number; fullPath: string }> = [];
+  // Extract all files from bundle data
+  const allFiles: Array<{ name: string; size: number; originalPath: string; fullPath: string }> = [];
     if (bundleData?.tree?.children) {
       bundleData.tree.children.forEach(rootNode => {
         allFiles.push(...getAllFiles(rootNode));
       });
     }
 
-    console.log('All files count:', allFiles);
-    console.log('Files to render count:', filesToRender);
+  // Filter files based on filesToRender (from the hook) and visible root folders
 
     // Filter files based on visible root folders and zero-byte filter
-    const filteredFiles = allFiles
-    .filter(file => {
-      return filesToRender.find(f => f.name === file.originalPath);
-
-    })
+    const filteredFiles = allFiles.filter(file => filesToRender.find((f: any) => f.name === file.originalPath))
     .filter(file => {
       const firstSlash = file.fullPath.indexOf('/');
       const topLevelFolder = firstSlash > 0 ? file.fullPath.substring(0, firstSlash) : '(root)';
@@ -140,7 +136,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       });
     });
 
-    // Calculate total sizes
+  // Calculate total sizes
     const calculateFolderSize = (folder: FolderNode): number => {
       const fileSize = folder.files.reduce((sum, file) => sum + file.size, 0);
       const childrenSize = folder.children.reduce((sum, child) => sum + calculateFolderSize(child), 0);
@@ -177,7 +173,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
     const totalSize = folder.totalSize;
 
     // Function to collapse single-child wrapper folders
-    const collapseFolders = (folderData: FolderNode): FolderNode => {
+  const collapseFolders = (folderData: FolderNode): FolderNode => {
       // If this folder has only one child folder and no files, collapse it
       if (folderData.children.length === 1 && folderData.files.length === 0) {
         const child = folderData.children[0];
@@ -197,7 +193,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       };
     };
 
-    const renderFolder = (folderData: FolderNode, depth: number = 0, siblingInfo?: { isLast: boolean; isPrelast: boolean }): JSX.Element => {
+    const renderFolder = (folderData: FolderNode, depth: number = 0): JSX.Element => {
       if (folderData.totalSize === 0) {
         return <></>;
       }
@@ -213,39 +209,6 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       allFolders.sort((a, b) => b.totalSize - a.totalSize);
 
       // Don't show folder wrapper if it's just the root or if it only has files and no meaningful structure
-      const showFolderHeader = collapsed.name && collapsed.name !== 'root' &&
-        (allFolders.length > 0 || (allFiles.length > 3 && collapsed.totalSize > totalSize * 0.1));
-
-      // Calculate which folders will show headers to determine last/prelast positions
-      const foldersWithHeaders = allFolders.map(child => {
-        const childCollapsed = collapseFolders(child);
-        return {
-          folder: child,
-          willShowHeader: childCollapsed.name && childCollapsed.name !== 'root' &&
-            (childCollapsed.children.filter(c => c.totalSize > 0).length > 0 ||
-             (childCollapsed.files.filter(f => !hideZeroByteFiles || f.size > 0).length > 3 &&
-              childCollapsed.totalSize > totalSize * 0.1))
-        };
-      }).filter(item => item.willShowHeader);
-
-
-      console.log(allFiles, allFolders)
-      let allFilesBoxes = allFiles.map(file => {
-              const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
-              const minSize = 20; // Minimum tile size in pixels
-              const maxSize = 200; // Maximum tile size in pixels
-              const size = Math.max(minSize, Math.min(maxSize, Math.sqrt(sizeRatio) * 1000));
-        return {
-          w: size  * 1.125,
-          h: size  * 1.125
-        }
-      })
-      const { w, h, fill } = potpack(allFilesBoxes);
-      // const isLast = !showFolderHeader
-      // const isPrelast = siblingInfo?.isLast ?? false;
-
-      console.log('pat box', w, h, fill, allFilesBoxes)
-      const folderName = (collapsed.path ? collapsed.path : collapsed.name)
 
       return (
         <div className={'treemap-folder'} key={collapsed.path}>
@@ -262,17 +225,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
               gap: "4px",
               alignItems: "flex-start",
           }}>
-            {allFolders.map((subfolder) => {
-              // Calculate sibling position info based on which folders will actually show headers
-              const siblingFolderIndex = foldersWithHeaders.findIndex(item => item.folder === subfolder);
-              const siblingInfo = siblingFolderIndex >= 0 ? {
-                isLast: siblingFolderIndex === foldersWithHeaders.length - 1,
-                isPrelast: siblingFolderIndex === foldersWithHeaders.length - 2
-              } : { isLast: false, isPrelast: false };
-
-              return renderFolder(subfolder, depth + 1, siblingInfo);
-            })}
-            {allFiles.map((file, i) => {
+            {allFolders.map((subfolder) => renderFolder(subfolder, depth + 1))}
+            {allFiles.map((file) => {
               const sizeRatio = Math.max(file.size / totalSize, 0.001); // Minimum size
               const minSize = 20; // Minimum tile size in pixels
               const maxSize = 200; // Maximum tile size in pixels
@@ -321,11 +275,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
     return renderFolder(folder, 0);
   };
 
-  if (!bundleData) {
-    return null;
-  }
-
-  const folderStructure = buildFolderStructure(bundleData);
+  const folderStructure = buildFolderStructure(bundleData, filesToRender);
 
   return <>
     <ResizablePanel title="File Size Visualization">
