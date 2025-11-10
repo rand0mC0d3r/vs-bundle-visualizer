@@ -252,7 +252,7 @@ function App() {
                 onScrollToFile={scrollToFileInMainContent}
               />
             )}
-            {showMainPanel && <div className={`tree-container ${showSidePanel || showTreemapPanel ? 'with-sidebar' : ''}`}>
+            {showMainPanel && (
               <TreeView
                 bundleData={bundleData}
                 expandedNodes={expandedNodes}
@@ -268,7 +268,7 @@ function App() {
                 onAddLibraryFilter={addLibraryFilter}
                 onRemoveLibraryFilter={removeLibraryFilter}
               />
-            </div>}
+)}
           </div>
         ) : (
           <div className="loading">

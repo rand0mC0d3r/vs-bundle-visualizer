@@ -2,6 +2,7 @@ import React from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
 import { formatFileSize, getFileColor, getFileIcon } from '../utils/fileUtils';
+import { ResizablePanel } from './General/ResizablePanel';
 import { FolderNode } from './types';
 
 interface TreemapPanelProps {
@@ -310,14 +311,9 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
 
   const folderStructure = buildFolderStructure(bundleData);
 
-  return (
-    <div className="treemap-panel">
-      <div className="side-panel-header">
-        <h3>File Size Visualizer</h3>
-      </div>
-      <div className="treemap-panel-content">
+  return <>
+    <ResizablePanel title="File Size Visualization">
         {renderTreemap(folderStructure)}
-      </div>
-    </div>
-  );
+    </ResizablePanel>
+  </>
 };

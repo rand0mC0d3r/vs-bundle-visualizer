@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { BundleData } from '../types';
 import { buildDependencyMap, checkFileMatchesLibraryFilters, checkFolderMatchesLibraryFilters, DependencyMap as SharedDependencyMap } from '../utils/dependencyUtils';
 import { formatFileSize, getFileExtension, getFileIcon } from '../utils/fileUtils';
+import { ResizablePanel } from './General/ResizablePanel';
 import { FolderNode } from './types';
 
 interface FolderPanelProps {
@@ -410,13 +411,8 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
   const folderStructure = buildFolderStructure(bundleData);
 
   return (
-    <div className="side-panel">
-      <div className="side-panel-header">
-        <h3>Folder Structure</h3>
-      </div>
-      <div className="side-panel-content">
-        {renderFolderTree(folderStructure)}
-      </div>
-    </div>
+    <ResizablePanel title="Folder Structure">
+      {renderFolderTree(folderStructure)}
+    </ResizablePanel>
   );
 };

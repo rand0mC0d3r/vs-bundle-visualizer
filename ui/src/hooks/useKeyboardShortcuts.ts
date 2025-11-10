@@ -44,10 +44,6 @@ export const useKeyboardShortcuts = ({
             event.preventDefault();
             onCollapseAll();
             break;
-          case 'r':
-            event.preventDefault();
-            vscodeApi.postMessage({ command: 'refresh' });
-            break;
           case 'b':
             event.preventDefault();
             onToggleSidePanel();

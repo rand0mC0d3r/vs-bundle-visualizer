@@ -607,13 +607,13 @@
 .main-layout {
   display: flex;
   height: 100%;
-  gap: 16px;
+  gap: 8px;
 }
 
 .side-panel {
   width: 600px;
   min-width: 250px;
-  max-width: 900px;
+  /* max-width: 1200px; */
   border-right: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-sideBar-background, var(--vscode-panel-background));
   display: flex;

@@ -1,6 +1,7 @@
 import React from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData, VSCodeAPI } from '../types';
+import { ResizablePanel } from './General/ResizablePanel';
 import { TreeViewRenderNode } from './TreeView/TreeViewRenderNode';
 import { SortCriteria, SortDirection } from './types';
 
@@ -110,7 +111,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return acc;
   }, {});
 
-  return <>
+  return <ResizablePanel title="Folder Structure" fullWidth={true}>
     {filesToRender.length > 0 && <div className="tree-container">
       {libraryFilters.length > 0 && (
         <div className="library-filters-header">
@@ -150,5 +151,5 @@ export const TreeView: React.FC<TreeViewProps> = ({
           No files to display with the current filters.
         </div>
       )}
-  </>
+  </ResizablePanel>
 };
