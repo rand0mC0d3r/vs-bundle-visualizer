@@ -57,6 +57,15 @@
         "command": "bundleVisualizer.askCopilot",
         "title": "Bundle Visualizer: Ask Copilot to Explain Import Chain"
       }
+      ,
+      {
+        "command": "bundleVisualizer.startMcpServer",
+        "title": "Bundle Visualizer: Start built-in MCP server"
+      },
+      {
+        "command": "bundleVisualizer.stopMcpServer",
+        "title": "Bundle Visualizer: Stop built-in MCP server"
+      }
     ],
     "mcpServerDefinitionProviders": [
       {
@@ -72,6 +81,13 @@
           "default": "dist/stats.json",
           "description": "Path to the bundle stats JSON file relative to workspace root.",
           "scope": "resource"
+        }
+        ,
+        "bundleVisualizer.mcpPort": {
+          "type": "number",
+          "default": 5215,
+          "description": "Port to listen on for the built-in MCP Streamable HTTP transport.",
+          "scope": "machine"
         }
       }
     }
