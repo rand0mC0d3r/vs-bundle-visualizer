@@ -5,7 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.6...HEAD)
+## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.7...HEAD)
+
+## [v0.0.7](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.6...v0.0.7) - 2025-11-10
+
+### Commits
+
+- chore: release new version [`dc293a2`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/dc293a2e3833fef106952aaa5782090ecc122977)
+- feat: enhance display name and description in package.json for clarity [`632d09e`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/632d09e8c6216a1be5850bf19f8205f6272ae785)
+- feat: update README title to include MCP and AI buddy reference [`71fd4e5`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/71fd4e537f9d11079e50272c67a474976877f416)
 
 ## [v0.0.6](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.5...v0.0.6) - 2025-11-10
 
