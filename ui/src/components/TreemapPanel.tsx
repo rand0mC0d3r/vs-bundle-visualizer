@@ -199,6 +199,22 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
     const groups = new Map<string, Array<any>>();
     const SUBGROUP_THRESHOLD = subgroupThreshold;
 
+    // derive top-level bundle names from bundleData.tree.children when possible
+    const bundleNames = new Set<string>();
+    try {
+      if (bundleData && bundleData.tree && Array.isArray(bundleData.tree.children)) {
+        bundleData.tree.children.forEach((n: any) => {
+          const nm = n?.name || n?.path || '';
+          if (nm) bundleNames.add(nm);
+        });
+      } else if (folderStructure && folderStructure.children) {
+        // fallback to folderStructure top-level names
+        folderStructure.children.forEach((c: any) => { if (c?.name) bundleNames.add(c.name); });
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const collectFiles = (node: FolderNode, collectInto: Array<any>, groupKey: string) => {
       node.files.forEach((f: any) => collectInto.push({ name: f.name, size: f.size, fullPath: f.fullPath, originalPath: f.originalPath, groupKey }));
       node.children.forEach(c => collectFiles(c, collectInto, groupKey));
@@ -243,14 +259,17 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(3).tile(treemapSquarify);
         treemapLayout(root as any);
 
-        const tiles: any[] = [];
-        // track a sample (largest) file per group while iterating leaves
-        const samples: Record<string, { name: string; size: number; fullPath?: string }> = {};
+  const tiles: any[] = [];
+  // track a sample (largest) file per group while iterating leaves; include originalPath when available
+  const samples: Record<string, { name: string; size: number; fullPath?: string; originalPath?: string }> = {};
         root.leaves().forEach((leaf: any) => {
           if (!leaf.data || !leaf.data.fullPath) return;
           const groupKey = (() => {
-            const firstSlash = leaf.data.fullPath.indexOf('/');
-            return firstSlash > 0 ? leaf.data.fullPath.substring(0, firstSlash) : '(root)';
+            // prefer grouping by top-level + immediate child when available (show one level more)
+            const parts = (leaf.data.fullPath || '').split('/').filter(Boolean);
+            if (parts.length >= 2) return `${parts[0]}/${parts[1]}`;
+            if (parts.length === 1) return parts[0];
+            return '(root)';
           })();
 
           tiles.push({
@@ -268,7 +287,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
 
           const cur = samples[groupKey];
           if (!cur || leaf.value > cur.size) {
-            samples[groupKey] = { name: leaf.data.name, size: leaf.value, fullPath: leaf.data.fullPath };
+            samples[groupKey] = { name: leaf.data.name, size: leaf.value, fullPath: leaf.data.fullPath, originalPath: leaf.data.originalPath };
           }
         });
 
@@ -276,7 +295,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         const labelsMap: Record<string, { x: number; y: number; w: number; h: number; total: number; sample?: string }> = {};
         tiles.forEach(t => {
           const g = t.groupKey;
-          if (!labelsMap[g]) labelsMap[g] = { x: t.x, y: t.y, w: t.w, h: t.h, total: 0, sample: samples[g] ? samples[g].name : undefined };
+          if (!labelsMap[g]) labelsMap[g] = { x: t.x, y: t.y, w: t.w, h: t.h, total: 0, sample: samples[g] ? (samples[g].originalPath || samples[g].name) : undefined };
           labelsMap[g].x = Math.min(labelsMap[g].x, t.x);
           labelsMap[g].y = Math.min(labelsMap[g].y, t.y);
           labelsMap[g].w = Math.max(labelsMap[g].w, t.x + t.w - labelsMap[g].x);
@@ -284,7 +303,22 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
           labelsMap[g].total += t.size;
         });
 
-        const labels = Object.keys(labelsMap).map(k => ({ name: k, ...labelsMap[k] }));
+        let labels = Object.keys(labelsMap).map(k => ({ name: k, ...labelsMap[k] }));
+
+        // helper to get basename
+        const basename = (s?: string) => (s ? String(s).split('/').filter(Boolean).pop() || s : s);
+
+        // filter labels so only those that match bundle names are shown
+        labels = labels.filter(l => {
+          const sample = l.sample || '';
+          const name = l.name || '';
+          return (
+            bundleNames.has(sample) ||
+            bundleNames.has(basename(sample)) ||
+            bundleNames.has(name) ||
+            bundleNames.has(basename(name))
+          );
+        });
 
         return { tiles, labels, width: containerSize.width, height: containerSize.height };
       } catch (e) {
@@ -347,7 +381,20 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       labels.push({ name: meta.folderName, x: Math.round(folderX), y: Math.round(folderY), w: Math.round(folderW), h: Math.round(folderH), total, sample: sampleName });
     });
 
-    return { tiles, labels, width: packedFolders.w * globalScale, height: packedFolders.h * globalScale };
+    // filter grouped labels by bundle names as well
+    const basename = (s?: string) => (s ? String(s).split('/').filter(Boolean).pop() || s : s);
+    const filteredLabels = labels.filter((l: any) => {
+      const sample = l.sample || '';
+      const name = l.name || '';
+      return (
+        bundleNames.has(sample) ||
+        bundleNames.has(basename(sample)) ||
+        bundleNames.has(name) ||
+        bundleNames.has(basename(name))
+      );
+    });
+
+    return { tiles, labels: filteredLabels, width: packedFolders.w * globalScale, height: packedFolders.h * globalScale };
   }, [folderStructure, containerSize.width, containerSize.height, subgroupThreshold, useD3, hideZeroByteFiles]);
 
   return (
@@ -425,27 +472,6 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                 onClick={() => onScrollToFile(t.fullPath)}
                 title={`${t.fullPath} - ${formatFileSize(t.size)}`}
               >
-                  {/* small overlay label showing the bundle file identifier (originalPath) when available */}
-                  <div
-                    style={{
-                      position: 'absolute',
-                      left: 4,
-                      top: 4,
-                      pointerEvents: 'none',
-                      background: 'rgba(0,0,0,0.55)',
-                      color: '#fff',
-                      padding: '1px 6px',
-                      fontSize: 10,
-                      borderRadius: 3,
-                      maxWidth: Math.max(8, (t.w || 0) - 8),
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {t.originalPath || t.name}
-                  </div>
-                  {/* <div className="treemap-file-icon">{getFileIcon(t.name, false)}</div> */}
                   <div className="treemap-file-size">{formatFileSize(t.size)}</div>
               </div>
             );
