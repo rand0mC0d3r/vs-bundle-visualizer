@@ -112,7 +112,7 @@ The stats file path can be configured via bundleVisualizer.statsPath setting (de
   // Helper function to start the MCP server
   async function startMcpServer() {
     if (httpServer) {
-      vscode.window.showInformationMessage(`MCP server already running on port ${transportPort}`);
+      vscode.window.showInformationMessage(`Bundle Analyzer MCP server already running on port ${transportPort}`);
       return;
     }
 
@@ -144,7 +144,7 @@ The stats file path can be configured via bundleVisualizer.statsPath setting (de
         try { httpServer && httpServer.close(); } catch {}
       }});
 
-      vscode.window.showInformationMessage(`MCP server listening on port ${port}`);
+      vscode.window.showInformationMessage(`Bundle Analyzer MCP server listening on port ${port}`);
 
       // Notify status change
       if (statusChangeCallback) {
@@ -175,7 +175,7 @@ The stats file path can be configured via bundleVisualizer.statsPath setting (de
     startMcpServer,
     stopMcpServer: async () => {
       if (!httpServer && !transport) {
-        vscode.window.showInformationMessage('MCP server is not running.');
+        vscode.window.showInformationMessage('Bundle Analyzer MCP server is not running.');
         return;
       }
       try { await server.close(); } catch (err) { console.warn('Error closing MCP server:', err); }
@@ -190,7 +190,7 @@ The stats file path can be configured via bundleVisualizer.statsPath setting (de
       httpServer = undefined;
       transport = undefined;
       transportPort = undefined;
-      vscode.window.showInformationMessage('MCP server stopped.');
+      vscode.window.showInformationMessage('Bundle Analyzer MCP server stopped.');
 
       // Notify status change
       if (statusChangeCallback) {
@@ -217,7 +217,7 @@ The stats file path can be configured via bundleVisualizer.statsPath setting (de
         vscode.window.showInformationMessage('MCP server definition copied to clipboard. Paste it into Configure Tools or your settings.');
       } catch (err: any) {
         console.error('Failed to copy MCP server definition:', err);
-        vscode.window.showErrorMessage('Failed to copy MCP server definition: ' + (err?.message ?? String(err)));
+        vscode.window.showErrorMessage('Failed to copy Bundle Analyzer MCP server definition: ' + (err?.message ?? String(err)));
       }
     },
     getStatus: (): McpServerStatus => {
