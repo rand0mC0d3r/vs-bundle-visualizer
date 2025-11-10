@@ -58,6 +58,12 @@
         "title": "Bundle Visualizer: Ask Copilot to Explain Import Chain"
       }
     ],
+    "mcpServerDefinitionProviders": [
+      {
+        "id": "vite-analyzer",
+        "label": "Vite Analyzer (built-in)"
+      }
+    ],
     "configuration": {
       "title": "Bundle Visualizer Configuration",
       "properties": {

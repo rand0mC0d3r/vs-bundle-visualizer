@@ -2,8 +2,7 @@ import { TextDecoder } from 'util';
 import * as vscode from 'vscode';
 import { PACKAGE_NAME } from './constants';
 
-// @ts-ignore - optional dependency may not be present in this environment/runtime
-import { MCPServer } from '@modelcontextprotocol/sdk';
+import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 
 async function analyzeBundle(folderPath: string) {
   const summary: Record<string, any> = {};
@@ -14,7 +13,42 @@ async function analyzeBundle(folderPath: string) {
 export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri);
 
-  const server = new MCPServer({
+  // Register an MCP server definition provider so VS Code's "Configure Tools" UI
+  // can discover this extension as a built-in MCP server provider. The provider
+  // returns a minimal server definition (label) so it appears in the list. We
+  // use a safe any-cast because the API surface may not be present in older
+  // @types/vscode packages in this workspace.
+  try {
+    const mcpProvider = {
+      provideMcpServerDefinitions: async () => {
+        return [
+          {
+            label: 'Vite Analyzer (built-in)'
+            // additional fields (e.g. version, launch) can be added here
+          }
+        ];
+      },
+      // Optional: resolve a server definition to a launch object later
+      resolveMcpServerDefinition: async (def: any) => {
+        // Not implementing automatic launch here. Returning the same def is fine
+        // for display purposes. If you want to support launching from VS Code's
+        // UI, return a resolved launch descriptor here.
+        return def;
+      }
+    };
+
+    // register provider (API may not be present in older type definitions)
+    // @ts-ignore
+    const disposable = (vscode as any).registerMcpServerDefinitionProvider('vite-analyzer', mcpProvider);
+    if (disposable) {
+      context.subscriptions.push(disposable as vscode.Disposable);
+    }
+  } catch (err) {
+    // No-op: if the API isn't available at runtime, this just won't register.
+    console.warn('MCP server definition provider registration failed:', err);
+  }
+
+  const server = new McpServer({
     name: 'vite-analyzer-mcp',
     version: '1.0.0',
   });
@@ -35,17 +69,25 @@ export async function activate(context: vscode.ExtensionContext) {
     },
   };
 
-  server.addTool(analyzeBundleTool);
-
-  // Start the MCP server and handle start failures so issues are visible
-  try {
-    await server.start();
-    console.log(`MCP Server started on port ${server.port}`);
-  } catch (err: any) {
-    console.error('Failed to start MCP Server:', err);
-    // show a message in VS Code so the user notices the failure
-    vscode.window.showWarningMessage('MCP Server failed to start: ' + (err?.message ?? String(err)));
-  }
+  // Register the analyze tool using the McpServer high-level API.
+  // We intentionally do not start/connect a transport here; connecting to a transport
+  // (HTTP/stdio) is the responsibility of the consumer. Registering the tool still
+  // prepares it for when a transport is connected.
+  server.registerTool(
+    'analyzeBundle',
+    {
+      title: 'Analyze Bundle',
+      description: 'Analyze Vite build output and summarize imports per file'
+    },
+    async (params: any) => {
+      const folderPath = params?.folderPath as string | undefined;
+      const summary = await analyzeBundle(folderPath || '');
+      return {
+        content: [{ type: 'text', text: JSON.stringify(summary) }],
+        structuredContent: summary
+      };
+    }
+  );
 
   context.subscriptions.push(
     vscode.commands.registerCommand('bundleVisualizer.show', () => {
@@ -80,7 +122,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // Auto-show the panel on activation
   provider.show();
 
-  context.subscriptions.push({ dispose: () => server.stop() });
+  context.subscriptions.push({ dispose: () => { try { server.close?.(); } catch {} } });
 }
 
 export function deactivate() {}
