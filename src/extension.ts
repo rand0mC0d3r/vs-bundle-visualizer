@@ -2,10 +2,7 @@ import { TextDecoder } from 'util';
 import * as vscode from 'vscode';
 import { PACKAGE_NAME } from './constants';
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import { randomUUID } from 'crypto';
-import * as http from 'http';
+import { setupMcp } from './mcp';
 
 async function analyzeBundle(folderPath: string) {
   const summary: Record<string, any> = {};
@@ -16,194 +13,13 @@ async function analyzeBundle(folderPath: string) {
 export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri);
 
-  // MCP runtime state for in-extension transport
-  let httpServer: http.Server | undefined;
-  let transport: StreamableHTTPServerTransport | undefined;
-  let transportPort: number | undefined;
-
-  // Register an MCP server definition provider so VS Code's "Configure Tools" UI
-  // can discover this extension as a built-in MCP server provider. The provider
-  // returns a minimal server definition (label) so it appears in the list. We
-  // use a safe any-cast because the API surface may not be present in older
-  // @types/vscode packages in this workspace.
-  try {
-    const mcpProvider = {
-      provideMcpServerDefinitions: async () => {
-        const config = vscode.workspace.getConfiguration(PACKAGE_NAME);
-        const port = config.get<number>('mcpPort') || 5215;
-        const def = {
-          id: 'bundle-visualizer-built-in',
-          label: 'Bundle Visualizer (built-in)',
-          host: 'localhost',
-          port,
-          launch: {
-            command: 'bundleVisualizer.startMcpServer'
-          }
-        };
-        return [def];
-      },
-      // Optional: resolve a server definition to a launch object later
-      resolveMcpServerDefinition: async (def: any) => {
-        // Ensure the resolved definition includes a launch command pointing at
-        // our start command so Configure Tools can start the built-in server.
-        return {
-          ...def,
-          launch: {
-            command: 'bundleVisualizer.startMcpServer'
-          }
-        };
-      }
-    };
-
-    // register provider (API may not be present in older type definitions)
-    // Check for the API first to avoid calling an undefined function (which
-    // results in a TypeError in older VS Code versions).
-    // @ts-ignore
-    const regFn = (vscode as any).registerMcpServerDefinitionProvider;
-    if (typeof regFn === 'function') {
-      // @ts-ignore
-      const disposable = regFn('vite-analyzer', mcpProvider);
-      if (disposable) {
-        context.subscriptions.push(disposable as vscode.Disposable);
-      }
-    } else {
-      // API not available at runtime — skip registration silently.
-      console.info('VS Code does not expose registerMcpServerDefinitionProvider; skipping runtime registration.');
-    }
-  } catch (err) {
-    // No-op: if the API isn't available at runtime, this just won't register.
-    console.warn('MCP server definition provider registration failed:', err);
-  }
-
-  const server = new McpServer({
-    name: 'vite-analyzer-mcp',
-    version: '1.0.0',
-  });
-    // created server instance (not started yet)
-
-
-  // Register the analyze tool using the McpServer high-level API.
-  // We intentionally do not start/connect a transport here; connecting to a transport
-  // (HTTP/stdio) is the responsibility of the consumer. Registering the tool still
-  // prepares it for when a transport is connected.
-  server.registerTool(
-    'analyzeBundle',
-    {
-      title: 'Analyze Bundle',
-      description: 'Analyze Vite build output and summarize imports per file'
-    },
-    async (params: any) => {
-      console.log('analyzeBundle tool invoked with params:', params);
-      const folderPath = params?.folderPath as string | undefined;
-
-      const summary = await analyzeBundle(folderPath || '');
-      return {
-        content: [{ type: 'text', text: JSON.stringify(summary) }],
-        structuredContent: summary
-      };
-    }
-  );
+  // Setup MCP server, tools and commands in a separate module to keep this file small.
+  const mcpDisposables = setupMcp(context, analyzeBundle);
+  mcpDisposables.forEach(d => context.subscriptions.push(d));
 
   context.subscriptions.push(
     vscode.commands.registerCommand('bundleVisualizer.show', () => {
       provider.show();
-    }),
-    vscode.commands.registerCommand('bundleVisualizer.startMcpServer', async () => {
-      // Start an in-extension Streamable HTTP transport and connect it to the McpServer
-      if (httpServer) {
-        vscode.window.showInformationMessage(`MCP server already running on port ${transportPort}`);
-        return;
-      }
-
-      const config = vscode.workspace.getConfiguration(PACKAGE_NAME);
-      const port = config.get<number>('mcpPort') || 5215;
-
-      try {
-        transport = new StreamableHTTPServerTransport({
-          sessionIdGenerator: () => randomUUID()
-        });
-
-        httpServer = http.createServer((req, res) => {
-          // let the transport handle the request (it will read the body if needed)
-          transport!.handleRequest(req as any, res as any).catch((err: any) => {
-            console.error('MCP transport handleRequest error:', err);
-            try { res.writeHead?.(500); res.end?.('Internal Server Error'); } catch {}
-          });
-        });
-
-        await new Promise<void>((resolve, reject) => {
-          httpServer!.once('error', reject);
-          httpServer!.listen(port, () => resolve());
-        });
-
-        // Connect the McpServer to the transport
-        await server.connect(transport as any);
-
-        transportPort = port;
-        context.subscriptions.push({ dispose: async () => {
-          try { await server.close(); } catch {};
-          try { httpServer && httpServer.close(); } catch {}
-        }});
-
-        vscode.window.showInformationMessage(`MCP server listening on port ${port}`);
-      } catch (err: any) {
-        console.error('Failed to start MCP HTTP transport:', err);
-        vscode.window.showErrorMessage('Failed to start MCP server: ' + (err?.message ?? String(err)));
-        try { httpServer && httpServer.close(); } catch {}
-        httpServer = undefined;
-        transport = undefined;
-      }
-    }),
-    vscode.commands.registerCommand('bundleVisualizer.stopMcpServer', async () => {
-      if (!httpServer && !transport) {
-        vscode.window.showInformationMessage('MCP server is not running.');
-        return;
-      }
-      try {
-        await server.close();
-      } catch (err) {
-        console.warn('Error closing MCP server:', err);
-      }
-      try {
-        await new Promise<void>((resolve, reject) => {
-          if (!httpServer) {return resolve();}
-          httpServer.close((err) => err ? reject(err) : resolve());
-        });
-      } catch (err) {
-        console.warn('Error closing HTTP server:', err);
-      }
-      httpServer = undefined;
-      transport = undefined;
-      transportPort = undefined;
-      vscode.window.showInformationMessage('MCP server stopped.');
-    }),
-    // Copy a JSON MCP server definition to the clipboard as a fallback for hosts
-    // that don't support runtime provider registration. Users can paste this
-    // into the Configure Tools UI or their settings to add the built-in server.
-    vscode.commands.registerCommand('bundleVisualizer.copyMcpDefinition', async () => {
-      try {
-        const config = vscode.workspace.getConfiguration(PACKAGE_NAME);
-        const port = config.get<number>('mcpPort') || 5215;
-
-        const def = {
-          id: 'bundle-visualizer-built-in',
-          label: 'Bundle Visualizer (built-in)',
-          host: 'localhost',
-          port,
-          // When Configure Tools or the user wants to start this server, it can
-          // use this launch command which maps to the extension command.
-          launch: {
-            command: 'bundleVisualizer.startMcpServer'
-          }
-        } as const;
-
-        const text = JSON.stringify(def, null, 2);
-        await vscode.env.clipboard.writeText(text);
-        vscode.window.showInformationMessage('MCP server definition copied to clipboard. Paste it into Configure Tools or your settings.');
-      } catch (err: any) {
-        console.error('Failed to copy MCP server definition:', err);
-        vscode.window.showErrorMessage('Failed to copy MCP server definition: ' + (err?.message ?? String(err)));
-      }
     }),
     vscode.commands.registerCommand('bundleVisualizer.refresh', () => {
       provider.refresh();
@@ -234,7 +50,7 @@ export async function activate(context: vscode.ExtensionContext) {
   // Auto-show the panel on activation
   provider.show();
 
-  context.subscriptions.push({ dispose: () => { try { server.close?.(); } catch {} } });
+  // Note: MCP cleanup is handled inside `setupMcp` and its returned disposables.
 }
 
 export function deactivate() {}
