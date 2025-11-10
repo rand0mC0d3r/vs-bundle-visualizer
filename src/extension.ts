@@ -6,9 +6,9 @@ export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri);
 
   const mcpDisposables = await setupMcp(context);
-  mcpDisposables.forEach(d => context.subscriptions.push(d));
 
   context.subscriptions.push(
+    ...mcpDisposables,
     vscode.commands.registerCommand('bundleVisualizer.show', () => {
       provider.show();
     }),
