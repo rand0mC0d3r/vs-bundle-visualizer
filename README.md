@@ -7,6 +7,8 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![VS Code Marketplace](https://img.shields.io/badge/VS%20Code-Extension-blue)](https://marketplace.visualstudio.com/items?itemName=bd-code.vs-bundle-visualizer)
 
+[![](preview.png)]()
+
 ## ✨ Features
 
 ### 📊 Interactive Visualization
@@ -15,17 +17,23 @@
 - **� Tree View**: Navigate through your bundle structure in a hierarchical tree
 - **📁 Folder Panel**: Organize and browse by folder structure
 
+[![](folders.png)]()
+
 ### 🎨 Seamless Integration
 - **🌓 Theme-Aware UI**: Automatically adapts to your VS Code theme (light/dark/high contrast)
 - **⚡ Real-time Updates**: Refresh data instantly with keyboard shortcuts or commands
 - **🔍 Advanced Filtering**: Filter and search through dependencies and modules
 - **📈 Statistics Dashboard**: View detailed metrics, sizes, and performance insights
 
+[![](header.png)]()
+
 ### 🤖 MCP Server Support
 - **� Built-in MCP Server**: Expose bundle analysis through Model Context Protocol
 - **🌐 HTTP Transport**: Streamable HTTP server on configurable port (default: 5215)
 - **🛠️ Tool Integration**: Use `analyzeBundle` tool in AI assistants and automation
 - **📋 Easy Configuration**: Copy MCP server definition with one command
+
+[![](configureTools.png)]()
 
 ### ⚡ Performance
 - **🚀 Fast Loading**: Built with Vite for optimal performance
@@ -176,6 +184,12 @@ Run `Bundle Visualizer: Stop built-in MCP server` from the Command Palette.
 - 📈 **Performance Monitoring**: Track and analyze bundles programmatically
 
 
+
+#### Asking to analyze your bundle via MCP can help AI assistants provide targeted optimization suggestions and code improvements.
+[![](conversation.png)]()
+
+#### Asking to improve bundle performance via MCP can yield actionable recommendations.
+[![](conversation2.png)]()
 
 
 ## 🛠️ Development
