@@ -66,6 +66,11 @@
         "command": "bundleVisualizer.stopMcpServer",
         "title": "Bundle Visualizer: Stop built-in MCP server"
       }
+      ,
+      {
+        "command": "bundleVisualizer.copyMcpDefinition",
+        "title": "Bundle Visualizer: Copy built-in MCP server definition"
+      }
     ],
     "mcpServerDefinitionProviders": [
       {

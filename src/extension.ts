@@ -29,17 +29,23 @@ export async function activate(context: vscode.ExtensionContext) {
   try {
     const mcpProvider = {
       provideMcpServerDefinitions: async () => {
-        return [
-          {
-            label: 'Vite Analyzer (built-in)'
-            // additional fields (e.g. version, launch) can be added here
+        const config = vscode.workspace.getConfiguration(PACKAGE_NAME);
+        const port = config.get<number>('mcpPort') || 5215;
+        const def = {
+          id: 'bundle-visualizer-built-in',
+          label: 'Bundle Visualizer (built-in)',
+          host: 'localhost',
+          port,
+          launch: {
+            command: 'bundleVisualizer.startMcpServer'
           }
-        ];
+        };
+        return [def];
       },
       // Optional: resolve a server definition to a launch object later
       resolveMcpServerDefinition: async (def: any) => {
-        // Provide a launch descriptor that uses our start command so the Configure
-        // Tools UI can ask VS Code to start the built-in MCP server.
+        // Ensure the resolved definition includes a launch command pointing at
+        // our start command so Configure Tools can start the built-in server.
         return {
           ...def,
           launch: {
@@ -75,20 +81,6 @@ export async function activate(context: vscode.ExtensionContext) {
   });
     // created server instance (not started yet)
 
-  const analyzeBundleTool = {
-    name: 'analyzeBundle',
-    description: 'Analyze Vite build output and summarize imports per file',
-    parameters: {
-      type: 'object',
-      properties: {
-        folderPath: { type: 'string' },
-      },
-      required: ['folderPath'],
-    },
-    async execute({ folderPath }: { folderPath: string }) {
-      return await analyzeBundle(folderPath);
-    },
-  };
 
   // Register the analyze tool using the McpServer high-level API.
   // We intentionally do not start/connect a transport here; connecting to a transport
@@ -101,7 +93,9 @@ export async function activate(context: vscode.ExtensionContext) {
       description: 'Analyze Vite build output and summarize imports per file'
     },
     async (params: any) => {
+      console.log('analyzeBundle tool invoked with params:', params);
       const folderPath = params?.folderPath as string | undefined;
+
       const summary = await analyzeBundle(folderPath || '');
       return {
         content: [{ type: 'text', text: JSON.stringify(summary) }],
@@ -182,6 +176,34 @@ export async function activate(context: vscode.ExtensionContext) {
       transport = undefined;
       transportPort = undefined;
       vscode.window.showInformationMessage('MCP server stopped.');
+    }),
+    // Copy a JSON MCP server definition to the clipboard as a fallback for hosts
+    // that don't support runtime provider registration. Users can paste this
+    // into the Configure Tools UI or their settings to add the built-in server.
+    vscode.commands.registerCommand('bundleVisualizer.copyMcpDefinition', async () => {
+      try {
+        const config = vscode.workspace.getConfiguration(PACKAGE_NAME);
+        const port = config.get<number>('mcpPort') || 5215;
+
+        const def = {
+          id: 'bundle-visualizer-built-in',
+          label: 'Bundle Visualizer (built-in)',
+          host: 'localhost',
+          port,
+          // When Configure Tools or the user wants to start this server, it can
+          // use this launch command which maps to the extension command.
+          launch: {
+            command: 'bundleVisualizer.startMcpServer'
+          }
+        } as const;
+
+        const text = JSON.stringify(def, null, 2);
+        await vscode.env.clipboard.writeText(text);
+        vscode.window.showInformationMessage('MCP server definition copied to clipboard. Paste it into Configure Tools or your settings.');
+      } catch (err: any) {
+        console.error('Failed to copy MCP server definition:', err);
+        vscode.window.showErrorMessage('Failed to copy MCP server definition: ' + (err?.message ?? String(err)));
+      }
     }),
     vscode.commands.registerCommand('bundleVisualizer.refresh', () => {
       provider.refresh();
@@ -269,6 +291,14 @@ class BundleVisualizerProvider {
           case 'refresh':
             this.refresh();
             break;
+          case 'startMcp':
+            // Start the built-in MCP server via the existing command
+            vscode.commands.executeCommand('bundleVisualizer.startMcpServer');
+            break;
+          case 'stopMcp':
+            // Stop the built-in MCP server via the existing command
+            vscode.commands.executeCommand('bundleVisualizer.stopMcpServer');
+            break;
         }
       }
     );
@@ -347,6 +377,26 @@ class BundleVisualizerProvider {
     </head>
     <body>
         <div id="root"></div>
+
+        <div style="position:fixed;right:12px;top:12px;z-index:9999;display:flex;gap:8px;">
+          <button id="bv-start">Start MCP</button>
+          <button id="bv-stop">Stop MCP</button>
+        </div>
+
+        <script nonce="${nonce}">
+          // Small helper to communicate with the extension host
+          (function(){
+            const start = document.getElementById('bv-start');
+            const stop = document.getElementById('bv-stop');
+            start?.addEventListener('click', () => {
+              window.acquireVsCodeApi()?.postMessage({ command: 'startMcp' });
+            });
+            stop?.addEventListener('click', () => {
+              window.acquireVsCodeApi()?.postMessage({ command: 'stopMcp' });
+            });
+          })();
+        </script>
+
         <script nonce="${nonce}" src="${scriptUri}"></script>
     </body>
     </html>`;
