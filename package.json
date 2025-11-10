@@ -12,7 +12,7 @@
     "Vite",
     "JavaScript"
   ],
-  "icon": "icon.png",
+  "icon": "icon_small.png",
   "repository": {
     "type": "git",
     "url": "https://github.com/rand0mC0d3r/vs-bundle-visualizer"

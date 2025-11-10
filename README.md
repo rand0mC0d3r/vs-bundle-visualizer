@@ -1,3 +1,5 @@
+[![](icon_small.png)]()
+
 # 📦 Bundle Visualizer for VS Code
 
 > **A powerful VS Code extension that visualizes bundle statistics for Webpack, Rollup, and Vite with an interactive React-based interface and built-in MCP server support.**
