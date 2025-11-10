@@ -1,8 +1,8 @@
 {
   "name": "vs-bundle-visualizer",
   "publisher": "bd-code",
-  "displayName": "Bundle visualizer for Rollup/Webpack json stats",
-  "description": "Visualize bundle statistics for Rollup and Webpack.",
+  "displayName": "Bundle visualizer + MCP Server (Rollup/Webpack json stats)",
+  "description": "Visualize bundle statistics for Rollup and Webpack. Analyzer of module composition. Built-in MCP server for Vite Analyzer integration to work with VS Code's Model Context Protocol.",
   "keywords": [
     "TypeScript",
     "Bundle",
