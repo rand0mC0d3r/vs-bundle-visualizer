@@ -52,8 +52,56 @@ async function analyzeBundle(filterOptions?: FilterOptions) {
 export const analyzeBundleTool = {
   name: 'analyzeBundle',
   schema: {
-    title: 'Analyze Bundle',
-    description: 'Analyze Vite build output from the configured stats file (bundleVisualizer.statsPath). Optional filter parameters: sortCriteria (filename|fileCount|fileSize), sortDirection (asc|desc), hiddenRootFolders (array), libraryFilters (array).'
+    title: 'Analyze Bundle Statistics',
+    description: `Analyzes JavaScript/TypeScript bundle composition from Rollup/Webpack stats files.
+
+Returns a comprehensive breakdown of your bundle including:
+- Total number of files and their combined size
+- Hierarchical folder structure with sizes
+- Individual file details with accurate size metrics
+
+This tool reads from the configured stats file (bundleVisualizer.statsPath setting, default: dist/stats.json).
+
+Optional filter parameters:
+- sortCriteria: How to sort results - 'filename' (alphabetical), 'fileCount' (number of files), or 'fileSize' (total size). Default: 'filename'
+- sortDirection: Sort order - 'asc' (ascending) or 'desc' (descending). Default: 'asc'
+- hiddenRootFolders: Array of root folder names to exclude from results (e.g., ['node_modules/.vite'])
+- libraryFilters: Array of library/folder names to focus on (returns only matching items)
+
+Common use cases:
+- No filters: Get complete bundle overview
+- Sort by fileSize desc: Find the largest contributors
+- Filter by specific libraries: Analyze particular dependencies
+- Hide folders: Remove noise from development artifacts
+
+Example: To find the 10 largest items, use sortCriteria='fileSize' and sortDirection='desc'`,
+    type: 'object',
+    properties: {
+      sortCriteria: {
+        type: 'string',
+        enum: ['filename', 'fileCount', 'fileSize'],
+        description: 'How to sort the results',
+        default: 'filename'
+      },
+      sortDirection: {
+        type: 'string',
+        enum: ['asc', 'desc'],
+        description: 'Sort direction',
+        default: 'asc'
+      },
+      hiddenRootFolders: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of root folder names to exclude from results',
+        default: []
+      },
+      libraryFilters: {
+        type: 'array',
+        items: { type: 'string' },
+        description: 'Array of library/folder names to filter by (only include matching items)',
+        default: []
+      }
+    }
   },
   handler: async (params: any) => {
     const filterOptions: FilterOptions = {

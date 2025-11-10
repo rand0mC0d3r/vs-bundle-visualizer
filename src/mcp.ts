@@ -28,6 +28,34 @@ export async function setupMcp(context: vscode.ExtensionContext, watcher?: Bundl
   const server = new McpServer({
     name: 'vite-analyzer-mcp',
     version: '1.0.0',
+    instructions: `This MCP server analyzes JavaScript/TypeScript bundle statistics from Rollup and Webpack builds.
+
+## Purpose
+Helps identify bundle size issues, large dependencies, and optimization opportunities in your JavaScript/Typescript projects.
+
+## Key Capabilities
+- Analyzes bundle composition from stats.json files (Rollup/Webpack format)
+- Provides detailed breakdowns of file sizes, folder structures, and dependencies
+- Supports filtering and sorting by various criteria
+- Identifies large dependencies that may need optimization
+
+## Usage Guidance
+1. First, ensure your project has generated a stats.json file (usually in dist/ or build/)
+2. Use the analyzeBundle tool to get a complete breakdown of your bundle
+3. Look for:
+   - Files/folders consuming the most space
+   - Duplicate dependencies across chunks
+   - Unexpectedly large vendor libraries
+   - Opportunities for code splitting or lazy loading
+
+## Typical Analysis Workflow
+- Start with a full analysis to get the overall picture
+- Filter by specific folders or libraries to drill down
+- Sort by size to identify the biggest contributors
+- Compare changes before/after optimizations
+
+## Configuration
+The stats file path can be configured via bundleVisualizer.statsPath setting (default: dist/stats.json).`
   });
 
   // Register analyze tool
