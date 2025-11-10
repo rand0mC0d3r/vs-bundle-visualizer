@@ -57,7 +57,7 @@ async function analyzeBundle(
 
 export type AnalyzeFn = (folderPath: string) => Promise<Record<string, any>>;
 
-export function setupMcp(context: vscode.ExtensionContext) {
+export async function setupMcp(context: vscode.ExtensionContext) {
   const disposables: vscode.Disposable[] = [];
 
   // MCP runtime state for in-extension transport
@@ -140,8 +140,8 @@ export function setupMcp(context: vscode.ExtensionContext) {
     console.warn('MCP server definition provider registration failed:', err);
   }
 
-  // Commands: start / stop / copy definition
-  const startCmd = vscode.commands.registerCommand('bundleVisualizer.startMcpServer', async () => {
+  // Helper function to start the MCP server
+  async function startMcpServer() {
     if (httpServer) {
       vscode.window.showInformationMessage(`MCP server already running on port ${transportPort}`);
       return;
@@ -183,6 +183,11 @@ export function setupMcp(context: vscode.ExtensionContext) {
       httpServer = undefined;
       transport = undefined;
     }
+  }
+
+  // Commands: start / stop / copy definition
+  const startCmd = vscode.commands.registerCommand('bundleVisualizer.startMcpServer', async () => {
+    await startMcpServer();
   });
   disposables.push(startCmd);
 
@@ -234,6 +239,9 @@ export function setupMcp(context: vscode.ExtensionContext) {
 
   // Ensure we close the server on extension deactivation
   disposables.push({ dispose: () => { try { server.close?.(); } catch {} } });
+
+  // Start the MCP server automatically at activation
+  await startMcpServer();
 
   return disposables;
 }

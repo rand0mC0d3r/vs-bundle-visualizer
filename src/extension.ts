@@ -5,7 +5,7 @@ import { BundleVisualizerProvider } from './webview';
 export async function activate(context: vscode.ExtensionContext) {
   const provider = new BundleVisualizerProvider(context.extensionUri);
 
-  const mcpDisposables = setupMcp(context);
+  const mcpDisposables = await setupMcp(context);
   mcpDisposables.forEach(d => context.subscriptions.push(d));
 
   context.subscriptions.push(
