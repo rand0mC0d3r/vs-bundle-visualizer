@@ -3,7 +3,7 @@ export interface FolderNode {
   path: string;
   originalPath?: string; // Preserves the original path before folder collapsing
   children: FolderNode[];
-  files: Array<{ name: string; size: number; fullPath: string }>;
+  files: Array<{ name: string; size: number; fullPath: string; originalPath?: string }>;
   totalSize: number;
 }
 

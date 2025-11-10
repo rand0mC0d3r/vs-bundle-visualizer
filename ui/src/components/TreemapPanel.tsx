@@ -3,7 +3,7 @@ import potpack from 'potpack';
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
-import { formatFileSize, getFileColor, getFileIcon } from '../utils/fileUtils';
+import { formatFileSize, getFileColor } from '../utils/fileUtils';
 import { ResizablePanel } from './General/ResizablePanel';
 import { FolderNode } from './types';
 
@@ -146,11 +146,12 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         currentPath = newPath;
       });
 
-      // Add file to its folder
+      // Add file to its folder (keep originalPath so we can label bundle file)
       currentFolder.files.push({
         name: fileName,
         size: file.size,
-        fullPath: file.fullPath
+        fullPath: file.fullPath,
+        originalPath: file.originalPath
       });
     });
 
@@ -199,7 +200,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
     const SUBGROUP_THRESHOLD = subgroupThreshold;
 
     const collectFiles = (node: FolderNode, collectInto: Array<any>, groupKey: string) => {
-      node.files.forEach((f: any) => collectInto.push({ name: f.name, size: f.size, fullPath: f.fullPath, groupKey }));
+      node.files.forEach((f: any) => collectInto.push({ name: f.name, size: f.size, fullPath: f.fullPath, originalPath: f.originalPath, groupKey }));
       node.children.forEach(c => collectFiles(c, collectInto, groupKey));
     };
 
@@ -243,8 +244,15 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         treemapLayout(root as any);
 
         const tiles: any[] = [];
+        // track a sample (largest) file per group while iterating leaves
+        const samples: Record<string, { name: string; size: number; fullPath?: string }> = {};
         root.leaves().forEach((leaf: any) => {
           if (!leaf.data || !leaf.data.fullPath) return;
+          const groupKey = (() => {
+            const firstSlash = leaf.data.fullPath.indexOf('/');
+            return firstSlash > 0 ? leaf.data.fullPath.substring(0, firstSlash) : '(root)';
+          })();
+
           tiles.push({
             key: leaf.data.fullPath,
             x: leaf.x0,
@@ -252,20 +260,23 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
             w: Math.max(1, leaf.x1 - leaf.x0),
             h: Math.max(1, leaf.y1 - leaf.y0),
             name: leaf.data.name,
-            fullPath: leaf.data.fullPath,
+              fullPath: leaf.data.fullPath,
+              originalPath: leaf.data.originalPath,
             size: leaf.value,
-            groupKey: (() => {
-              const firstSlash = leaf.data.fullPath.indexOf('/');
-              return firstSlash > 0 ? leaf.data.fullPath.substring(0, firstSlash) : '(root)';
-            })()
+            groupKey
           });
+
+          const cur = samples[groupKey];
+          if (!cur || leaf.value > cur.size) {
+            samples[groupKey] = { name: leaf.data.name, size: leaf.value, fullPath: leaf.data.fullPath };
+          }
         });
 
         // create basic labels by grouping tiles by their top-level groupKey
-        const labelsMap: Record<string, { x: number; y: number; w: number; h: number; total: number }> = {};
+        const labelsMap: Record<string, { x: number; y: number; w: number; h: number; total: number; sample?: string }> = {};
         tiles.forEach(t => {
           const g = t.groupKey;
-          if (!labelsMap[g]) labelsMap[g] = { x: t.x, y: t.y, w: t.w, h: t.h, total: 0 };
+          if (!labelsMap[g]) labelsMap[g] = { x: t.x, y: t.y, w: t.w, h: t.h, total: 0, sample: samples[g] ? samples[g].name : undefined };
           labelsMap[g].x = Math.min(labelsMap[g].x, t.x);
           labelsMap[g].y = Math.min(labelsMap[g].y, t.y);
           labelsMap[g].w = Math.max(labelsMap[g].w, t.x + t.w - labelsMap[g].x);
@@ -323,10 +334,17 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         const y = Math.round((b.y || 0) * innerScale + folderY + 5);
         const w = Math.max(6, Math.round(b.w * innerScale));
         const h = Math.max(6, Math.round(b.h * innerScale));
-        tiles.push({ key: file.fullPath, x, y, w, h, name: file.name, fullPath: file.fullPath, size: file.size, groupKey: file.groupKey });
+        tiles.push({ key: file.fullPath, x, y, w, h, name: file.name, fullPath: file.fullPath, originalPath: file.originalPath, size: file.size, groupKey: file.groupKey });
       });
 
-      labels.push({ name: meta.folderName, x: Math.round(folderX), y: Math.round(folderY), w: Math.round(folderW), h: Math.round(folderH), total });
+      // pick the largest file within the folder as a representative sample for the label
+      let sampleName: string | undefined = undefined;
+      if (boxes && boxes.length > 0) {
+        const largest = boxes.reduce((m: any, b: any) => (b.meta.size > (m?.meta?.size || 0) ? b : m), boxes[0]);
+        sampleName = largest?.meta?.name;
+      }
+
+      labels.push({ name: meta.folderName, x: Math.round(folderX), y: Math.round(folderY), w: Math.round(folderW), h: Math.round(folderH), total, sample: sampleName });
     });
 
     return { tiles, labels, width: packedFolders.w * globalScale, height: packedFolders.h * globalScale };
@@ -346,9 +364,36 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
           {/* labels */}
           {layout.labels.map((label: any) => (
-            <div key={`lbl-${label.name}`} style={{ position: 'absolute', left: label.x, top: label.y, pointerEvents: 'none' }}>
-              <div style={{ background: 'rgba(0,0,0,0.6)', color: 'white', padding: '2px 6px', fontSize: 12, borderRadius: 3 }}>{label.name} ({formatFileSize(label.total)})</div>
-            </div>
+            <React.Fragment key={`lbl-${label.name}`}>
+              {/* outline around the group */}
+              <div
+                key={`outline-${label.name}`}
+                style={{
+                  position: 'absolute',
+                  left: label.x,
+                  top: label.y,
+                  width: label.w,
+                  height: label.h,
+                  border: '1px solid rgba(0,0,0,0.18)',
+                  boxSizing: 'border-box',
+                  pointerEvents: 'none',
+                  borderRadius: 4,
+                  background: 'rgba(255,255,255,0.02)'
+                }}
+              />
+
+              {/* label content */}
+              <div key={`lblbox-${label.name}`} style={{ position: 'absolute', left: label.x + 6, top: label.y + 6, pointerEvents: 'none' }}>
+                <div style={{ background: 'rgba(0,0,0,0.6)', color: 'white', padding: '2px 6px', fontSize: 12, borderRadius: 3 }}>
+                  {label.name} ({formatFileSize(label.total)})
+                </div>
+                {label.sample ? (
+                  <div style={{ marginTop: 4, background: 'rgba(0,0,0,0.35)', color: '#eee', padding: '2px 6px', fontSize: 11, borderRadius: 3 }}>
+                    {label.sample}
+                  </div>
+                ) : null}
+              </div>
+            </React.Fragment>
           ))}
 
           {/* tiles */}
@@ -379,8 +424,28 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                 onClick={() => onScrollToFile(t.fullPath)}
                 title={`${t.fullPath} - ${formatFileSize(t.size)}`}
               >
-                <div className="treemap-file-icon">{getFileIcon(t.name, false)}</div>
-                <div className="treemap-file-size">{formatFileSize(t.size)}</div>
+                  {/* small overlay label showing the bundle file identifier (originalPath) when available */}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      left: 4,
+                      top: 4,
+                      pointerEvents: 'none',
+                      background: 'rgba(0,0,0,0.55)',
+                      color: '#fff',
+                      padding: '1px 6px',
+                      fontSize: 10,
+                      borderRadius: 3,
+                      maxWidth: Math.max(8, (t.w || 0) - 8),
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis'
+                    }}
+                  >
+                    {t.originalPath || t.name}
+                  </div>
+                  {/* <div className="treemap-file-icon">{getFileIcon(t.name, false)}</div> */}
+                  <div className="treemap-file-size">{formatFileSize(t.size)}</div>
               </div>
             );
           })}
