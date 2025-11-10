@@ -111,7 +111,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
     return acc;
   }, {});
 
-  return <ResizablePanel title="Folder Structure" fullWidth={true}>
+  return <ResizablePanel title="Asset Structure" fullWidth={true}>
     {filesToRender.length > 0 && <div className="tree-container">
       {libraryFilters.length > 0 && (
         <div className="library-filters-header">

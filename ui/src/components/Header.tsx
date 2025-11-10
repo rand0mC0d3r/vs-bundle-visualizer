@@ -70,7 +70,7 @@ export const Header: React.FC<HeaderProps> = ({
     {
       action: onToggleSidePanel,
       disabled: false,
-      isVisible: showSidePanel,
+      isVisible: !showSidePanel,
       label: showSidePanel ? 'Hide 📂' : 'Show 📂',
       name: 'sidePanel',
       title: 'Toggle folder panel',
@@ -78,7 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
     {
       action: onToggleTreemapPanel,
       disabled: false,
-      isVisible: showTreemapPanel,
+      isVisible: !showTreemapPanel,
       label: showTreemapPanel ? 'Hide 🌳' : 'Show 🌳',
       name: 'treemapPanel',
       title: 'Toggle treemap panel',
@@ -86,7 +86,7 @@ export const Header: React.FC<HeaderProps> = ({
     {
       action: onToggleMainPanel,
       disabled: false,
-      isVisible: showMainPanel,
+      isVisible: !showMainPanel,
       label: showMainPanel ? 'Hide Main Panel' : 'Show Main Panel',
       name: 'mainPanel',
       title: 'Toggle main panel',

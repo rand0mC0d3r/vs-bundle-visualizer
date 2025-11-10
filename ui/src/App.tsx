@@ -268,7 +268,7 @@ function App() {
                 onAddLibraryFilter={addLibraryFilter}
                 onRemoveLibraryFilter={removeLibraryFilter}
               />
-)}
+            )}
           </div>
         ) : (
           <div className="loading">
