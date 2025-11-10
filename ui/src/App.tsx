@@ -211,6 +211,8 @@ function App() {
         onExpandAll={expandAll}
         onCollapseAll={collapseAll}
         onRefresh={() => vscodeApi.postMessage({ command: 'refresh' })}
+        startMCP={() => vscodeApi.postMessage({ command: 'startMcp' })}
+        stopMCP={() => vscodeApi.postMessage({ command: 'stopMcp' })}
       />
 
       <div className="content">

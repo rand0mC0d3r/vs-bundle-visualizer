@@ -23,6 +23,8 @@ interface HeaderProps {
   onExpandAll: () => void;
   onCollapseAll: () => void;
   onRefresh: () => void;
+  startMCP: () => void;
+  stopMCP: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -44,6 +46,8 @@ export const Header: React.FC<HeaderProps> = ({
   onExpandAll,
   onCollapseAll,
   onRefresh,
+  startMCP,
+  stopMCP,
 }) => {
   const { filesToRender } = bundleData
     ? useFilteredNodes(bundleData, hiddenRootFolders, sortCriteria, sortDirection, libraryFilters)
@@ -156,6 +160,23 @@ export const Header: React.FC<HeaderProps> = ({
             title="Refresh bundle data"
           >
             Refresh
+          </button>
+        </div>
+
+        <div className="toolbar-section">
+          <button
+            className="toolbar-button"
+            onClick={startMCP}
+            title="Start MCP server"
+          >
+            Start MCP
+          </button>
+          <button
+            className="toolbar-button"
+            onClick={stopMCP}
+            title="Stop MCP server"
+          >
+            Stop MCP
           </button>
         </div>
       </div>

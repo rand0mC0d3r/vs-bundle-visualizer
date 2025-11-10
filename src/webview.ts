@@ -138,26 +138,6 @@ export class BundleVisualizerProvider {
     </head>
     <body>
         <div id="root"></div>
-
-        // <div style="position:fixed;right:12px;top:12px;z-index:9999;display:flex;gap:8px;">
-        //   <button id="bv-start">Start MCP</button>
-        //   <button id="bv-stop">Stop MCP</button>
-        // </div>
-
-        // <script nonce="${nonce}">
-        //   // Small helper to communicate with the extension host
-        //   (function(){
-        //     const start = document.getElementById('bv-start');
-        //     const stop = document.getElementById('bv-stop');
-        //     start?.addEventListener('click', () => {
-        //       window.acquireVsCodeApi()?.postMessage({ command: 'startMcp' });
-        //     });
-        //     stop?.addEventListener('click', () => {
-        //       window.acquireVsCodeApi()?.postMessage({ command: 'stopMcp' });
-        //     });
-        //   })();
-        // </script>
-
         <script nonce="${nonce}" src="${scriptUri}"></script>
     </body>
     </html>`;
