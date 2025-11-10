@@ -1,10 +1,16 @@
 import * as vscode from 'vscode';
+import { BundleDataWatcher } from './bundleDataWatcher';
 import { setupMcp } from './mcp';
 import { BundleVisualizerProvider } from './webview';
 
 export async function activate(context: vscode.ExtensionContext) {
-  const provider = new BundleVisualizerProvider(context.extensionUri);
-  const mcp = await setupMcp(context);
+  // Create the bundle data watcher
+  const watcher = new BundleDataWatcher();
+  watcher.start(context);
+
+  // Create provider and MCP with the watcher
+  const provider = new BundleVisualizerProvider(context.extensionUri, watcher);
+  const mcp = await setupMcp(context, watcher);
 
   context.subscriptions.push(
     ...mcp.disposables,
@@ -13,6 +19,8 @@ export async function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand('bundleVisualizer.copyMcpDefinition', () => mcp.copyMcpDefinition()),
     vscode.commands.registerCommand('bundleVisualizer.show', () => provider.show()),
     vscode.commands.registerCommand('bundleVisualizer.refresh', () => provider.refresh()),
+    { dispose: () => watcher.dispose() },
+    { dispose: () => provider.dispose() },
   );
 
   provider.show();

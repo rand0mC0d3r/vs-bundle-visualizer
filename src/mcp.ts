@@ -3,12 +3,13 @@ import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/
 import { randomUUID } from 'crypto';
 import * as http from 'http';
 import * as vscode from 'vscode';
+import { BundleDataWatcher } from './bundleDataWatcher';
 import { PACKAGE_NAME } from './constants';
 import { analyzeBundleTool } from './tools/analyzeBundle';
 
 export type AnalyzeFn = (folderPath: string) => Promise<Record<string, any>>;
 
-export async function setupMcp(context: vscode.ExtensionContext) {
+export async function setupMcp(context: vscode.ExtensionContext, watcher?: BundleDataWatcher) {
   const disposables: vscode.Disposable[] = [];
 
   // MCP runtime state for in-extension transport
@@ -23,6 +24,14 @@ export async function setupMcp(context: vscode.ExtensionContext) {
 
   // Register analyze tool
   server.registerTool(analyzeBundleTool.name, analyzeBundleTool.schema, analyzeBundleTool.handler);
+
+  // Listen for bundle data changes if watcher is provided
+  if (watcher) {
+    const watcherDisposable = watcher.onChange(() => {
+      console.log('Bundle data changed - MCP tool will use fresh data on next call');
+    });
+    disposables.push(watcherDisposable);
+  }
 
   // Provide an MCP server definition provider (runtime) when available
   try {

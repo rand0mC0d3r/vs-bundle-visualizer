@@ -1,13 +1,22 @@
 import { TextDecoder } from 'util';
 import * as vscode from 'vscode';
+import { BundleDataWatcher } from './bundleDataWatcher';
 import { PACKAGE_NAME } from './constants';
 
 export class BundleVisualizerProvider {
   private panel: vscode.WebviewPanel | undefined;
   private readonly extensionUri: vscode.Uri;
+  private watcherDisposable: vscode.Disposable | undefined;
 
-  constructor(extensionUri: vscode.Uri) {
+  constructor(extensionUri: vscode.Uri, private watcher?: BundleDataWatcher) {
     this.extensionUri = extensionUri;
+
+    // Listen for file changes if watcher is provided
+    if (this.watcher) {
+      this.watcherDisposable = this.watcher.onChange(() => {
+        this.refresh();
+      });
+    }
   }
 
   public askAboutFile(uri: vscode.Uri) {
@@ -141,6 +150,17 @@ export class BundleVisualizerProvider {
         <script nonce="${nonce}" src="${scriptUri}"></script>
     </body>
     </html>`;
+  }
+
+  public dispose() {
+    if (this.watcherDisposable) {
+      this.watcherDisposable.dispose();
+      this.watcherDisposable = undefined;
+    }
+    if (this.panel) {
+      this.panel.dispose();
+      this.panel = undefined;
+    }
   }
 }
 
