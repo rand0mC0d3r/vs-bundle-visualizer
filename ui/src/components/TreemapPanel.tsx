@@ -23,9 +23,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   hiddenRootFolders,
   onScrollToFile
 }) => {
-  if (!bundleData) {
-    return null as any;
-  }
+  if (!bundleData) return null as any;
 
   const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders, 'filename', 'asc', libraryFilters);
 
@@ -36,158 +34,81 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => {
-      setContainerSize({ width: el.clientWidth || 1200, height: el.clientHeight || 600 });
-    });
+    const ro = new ResizeObserver(() => setContainerSize({ width: el.clientWidth || 1200, height: el.clientHeight || 600 }));
     ro.observe(el);
-    // initialize
     setContainerSize({ width: el.clientWidth || 1200, height: el.clientHeight || 600 });
     return () => ro.disconnect();
   }, []);
 
-  const buildFolderStructure = (bundleData: BundleData, filesToRender: any[]): FolderNode => {
-    const root: FolderNode = {
-      name: 'root',
-      path: '',
-      originalPath: '',
-      children: [],
-      files: [],
-      totalSize: 0
-    };
+  const folderStructure = useMemo<FolderNode>(() => {
+    const root: FolderNode = { name: 'root', path: '', originalPath: '', children: [], files: [], totalSize: 0 };
+    const folderMap = new Map<string, FolderNode>([['', root]]);
+    const filesSet = new Set((filesToRender || []).map((f: any) => f.name));
 
-
-    const folderMap = new Map<string, FolderNode>();
-    folderMap.set('', root);
-
-    const isRootFolderVisible = (rootFolderName: string): boolean => {
-      return !hiddenRootFolders.has(rootFolderName);
-    };
-
-    const getNodeSize = (node: any): number => {
-      if (node.value) {
-        return node.value;
-      }
-      if (node.uid && bundleData.nodeParts && bundleData.nodeParts[node.uid]) {
-        return bundleData.nodeParts[node.uid].renderedLength;
-      }
-      if (node.children && node.children.length > 0) {
-        return node.children.reduce((total: number, child: any) => total + getNodeSize(child), 0);
-      }
+    const nodeSize = (n: any): number => {
+      if (!n) return 0;
+      if (typeof n.value === 'number') return n.value;
+      if (n.uid && bundleData.nodeParts?.[n.uid]) return bundleData.nodeParts[n.uid].renderedLength || 0;
+      if (Array.isArray(n.children)) return n.children.reduce((s: number, c: any) => s + nodeSize(c), 0);
       return 0;
     };
 
-    const getAllFiles = (node: any, currentPath: string = ''): Array<{ name: string; size: number; originalPath: string; fullPath: string }> => {
-      const files: Array<{ name: string; size: number; originalPath: string; fullPath: string }> = [];
-
-      if (node.name && !node.children) {
-        files.push({
-          name: node.name,
-          size: getNodeSize(node),
-          originalPath: currentPath.split('.js')[0] + '.js',
-          fullPath: currentPath ? `${currentPath}/${node.name}` : node.name
-        });
+    const addFile = (fullPath: string, size: number, originalPath: string) => {
+      const parts = fullPath.split('/').filter(Boolean);
+      const fileName = parts.pop() || '';
+      let currentPath = '';
+      let current = root;
+      for (const p of parts) {
+        const newPath = currentPath ? `${currentPath}/${p}` : p;
+        if (!folderMap.has(newPath)) {
+          const node: FolderNode = { name: p, path: newPath, originalPath: newPath, children: [], files: [], totalSize: 0 };
+          folderMap.set(newPath, node);
+          current.children.push(node);
+        }
+        current = folderMap.get(newPath)!;
+        currentPath = newPath;
       }
-
-      if (node.children) {
-        node.children.forEach((child: any) => {
-          files.push(...getAllFiles(child, currentPath ? `${currentPath}/${node.name}` : node.name));
-        });
-      }
-
-      return files;
+      current.files.push({ name: fileName, size, fullPath, originalPath });
     };
 
-  // Extract all files from bundle data
-  const allFiles: Array<{ name: string; size: number; originalPath: string; fullPath: string }> = [];
-    if (bundleData?.tree?.children) {
-      bundleData.tree.children.forEach(rootNode => {
-        allFiles.push(...getAllFiles(rootNode));
-      });
+    const walk = (n: any, currentPath = '') => {
+      if (!n) return;
+      if (n.name && !n.children) {
+        const fullPath = currentPath ? `${currentPath}/${n.name}` : n.name;
+        const originalPath = String(currentPath).split('.js')[0] + '.js';
+        const size = nodeSize(n);
+        const topLevel = (fullPath.split('/')[0] || '(root)');
+        if (!hiddenRootFolders.has(topLevel) && filesSet.has(originalPath) && (!hideZeroByteFiles || size > 0)) {
+          addFile(fullPath, size, originalPath);
+        }
+        return;
+      }
+      if (n.children) {
+        for (const child of n.children) walk(child, currentPath ? `${currentPath}/${n.name}` : n.name);
+      }
+    };
+
+    if (Array.isArray(bundleData?.tree?.children)) {
+      for (const node of bundleData.tree.children) walk(node);
     }
 
-  // Filter files based on filesToRender (from the hook) and visible root folders
-
-    // Filter files based on visible root folders and zero-byte filter
-    const filteredFiles = allFiles.filter(file => filesToRender.find((f: any) => f.name === file.originalPath))
-    .filter(file => {
-      const firstSlash = file.fullPath.indexOf('/');
-      const topLevelFolder = firstSlash > 0 ? file.fullPath.substring(0, firstSlash) : '(root)';
-      const isVisible = isRootFolderVisible(topLevelFolder);
-      const isNotZeroByte = !hideZeroByteFiles || file.size > 0;
-      return isVisible && isNotZeroByte;
-    });
-
-    // Build folder structure
-    filteredFiles.forEach(file => {
-      const pathParts = file.fullPath.split('/');
-      const fileName = pathParts.pop() || '';
-      let currentPath = '';
-      let currentFolder = root;
-
-      // Create folder hierarchy
-      pathParts.forEach(folderName => {
-        const newPath = currentPath ? `${currentPath}/${folderName}` : folderName;
-
-        if (!folderMap.has(newPath)) {
-          const newFolder: FolderNode = {
-            name: folderName,
-            path: newPath,
-            originalPath: newPath, // Initially, originalPath is the same as path
-            children: [],
-            files: [],
-            totalSize: 0
-          };
-          folderMap.set(newPath, newFolder);
-          currentFolder.children.push(newFolder);
-        }
-
-        currentFolder = folderMap.get(newPath)!;
-        currentPath = newPath;
-      });
-
-      // Add file to its folder (keep originalPath so we can label bundle file)
-      currentFolder.files.push({
-        name: fileName,
-        size: file.size,
-        fullPath: file.fullPath,
-        originalPath: file.originalPath
-      });
-    });
-
-  // Calculate total sizes
-    const calculateFolderSize = (folder: FolderNode): number => {
-      const fileSize = folder.files.reduce((sum, file) => sum + file.size, 0);
-      const childrenSize = folder.children.reduce((sum, child) => sum + calculateFolderSize(child), 0);
-      folder.totalSize = fileSize + childrenSize;
-      return folder.totalSize;
+    const calc = (f: FolderNode): number => {
+      const filesSize = f.files.reduce((s, it) => s + (it.size || 0), 0);
+      const childrenSize = f.children.reduce((s, c) => s + calc(c), 0);
+      f.totalSize = filesSize + childrenSize;
+      return f.totalSize;
     };
+    calc(root);
 
-    calculateFolderSize(root);
-
-    // Remove empty folders if filter is enabled
     if (hideZeroByteFiles) {
-      const removeEmptyFolders = (folder: FolderNode): FolderNode => {
-        // First, recursively clean children
-        const cleanedChildren = folder.children
-          .map(child => removeEmptyFolders(child))
-          .filter(child => child.totalSize > 0 || child.files.length > 0 || child.children.length > 0);
-
-        return {
-          ...folder,
-          children: cleanedChildren
-        };
-      };
-
-      const cleanedRoot = removeEmptyFolders(root);
-      // Recalculate sizes after cleaning
-      calculateFolderSize(cleanedRoot);
-      return cleanedRoot;
+      const prune = (f: FolderNode): FolderNode => ({ ...f, children: f.children.map(prune).filter(c => c.totalSize > 0 || c.files.length > 0) });
+      const cleaned = prune(root);
+      calc(cleaned);
+      return cleaned;
     }
 
     return root;
-  };
-  // Compute folder structure once
-  const folderStructure = buildFolderStructure(bundleData, filesToRender);
+  }, [bundleData, filesToRender, hideZeroByteFiles, hiddenRootFolders]);
 
   // Compute layout with d3-hierarchy treemap only
   const layout = useMemo(() => {
@@ -285,7 +206,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       console.warn('d3 layout failed', e);
       return { tiles: [], labels: [], width: containerSize.width, height: containerSize.height };
     }
-  }, [folderStructure, containerSize.width, containerSize.height, hideZeroByteFiles, bundleData]);
+  }, [folderStructure, containerSize.width, containerSize.height]);
 
   return (
     <ResizablePanel title="File Size Visualization">
