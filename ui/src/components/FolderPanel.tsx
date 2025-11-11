@@ -430,7 +430,7 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
 
   // Initialize slider to max depth when the structure changes, but don't trigger toggles on mount
   useEffect(() => {
-    setSelectedDepth(computedMaxDepth);
+    setSelectedDepth(1);
   }, [computedMaxDepth]);
 
   // When the selected depth changes, compute which folders should be expanded and toggle as needed
