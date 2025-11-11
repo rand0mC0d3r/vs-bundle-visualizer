@@ -607,7 +607,6 @@
 .main-layout {
   display: flex;
   height: 100%;
-  gap: 8px;
 }
 
 .side-panel {
