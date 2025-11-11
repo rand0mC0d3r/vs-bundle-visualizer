@@ -53,7 +53,7 @@ export class BundleVisualizerProvider {
 
     this.panel = vscode.window.createWebviewPanel(
       'bundleVisualizer',
-      '🔍 Bundle Visualizer',
+      'Bundle Visualizer',
       column || vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -66,7 +66,17 @@ export class BundleVisualizerProvider {
       }
     );
 
-  this.panel.webview.html = await this.getHtmlForWebview();
+    // Provide a tab icon for the webview panel. Use theme-aware URIs when possible.
+    // If you have separate light/dark icons place them under `media/` and update the names.
+    try {
+      const lightIcon = vscode.Uri.joinPath(this.extensionUri, 'ui', 'media', 'icon_small.png');
+      const darkIcon = vscode.Uri.joinPath(this.extensionUri, 'ui', 'media', 'icon_small.png');
+      this.panel.iconPath = { light: lightIcon, dark: darkIcon };
+    } catch (e) {
+      // ignore if icons are missing — the panel will just show no icon
+    }
+
+    this.panel.webview.html = await this.getHtmlForWebview();
 
     this.panel.onDidDispose(() => {
       this.panel = undefined;
