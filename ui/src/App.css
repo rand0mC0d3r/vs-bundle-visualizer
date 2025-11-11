@@ -682,7 +682,9 @@
 }
 
 .treemap-panel-wrapper {
-  border: 1px dashed var(--vscode-editor-foreground);
+  /* use the editor foreground color but make the border 50% transparent
+     if an RGB version of the color is available use it, otherwise fall back to white */
+  border: 1px dotted rgba(var(--vscode-editor-foreground-rgb, 255,255,255), 0.25);
 }
 
 
