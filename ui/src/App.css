@@ -792,6 +792,13 @@
   outline-offset: 1px;
 }
 
+/* Dotted border for bundle files (e.g. files emitted to /dist or /assets or hashed bundle files) */
+.treemap-file.bundle-file {
+  border: 5px dotted red;
+  /* give a tiny inset so border is visible against the background color */
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.02);
+}
+
 .treemap-file-content {
   padding: 4px;
   height: 100%;

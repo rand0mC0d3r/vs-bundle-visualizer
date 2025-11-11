@@ -294,6 +294,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
           {layout.tiles.map((t: any) => {
             const baseColor = getFileColor(t.name);
             const lightColor = baseColor + '80';
+
             return (
               <div
                 key={t.key}
@@ -335,7 +336,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {t.name}
+                    {t.name} {t.originalPath}
                   </div>
                   <div className="treemap-file-size">{formatFileSize(t.size)}</div>
               </div>
