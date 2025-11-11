@@ -291,41 +291,6 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
     <ResizablePanel title="File Size Visualization">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
         <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-          {/* labels */}
-          {layout.labels.map((label: any) => (
-            <React.Fragment key={`lbl-${label.name}`}>
-              {/* outline around the group */}
-              <div
-                key={`outline-${label.name}`}
-                style={{
-                  position: 'absolute',
-                  left: label.x,
-                  top: label.y,
-                  width: label.w,
-                  height: label.h,
-                  border: '1px solid rgba(0,0,0,0.18)',
-                  boxSizing: 'border-box',
-                  pointerEvents: 'none',
-                  borderRadius: 4,
-                  background: 'rgba(255,255,255,0.02)'
-                }}
-              />
-
-              {/* label content */}
-              <div key={`lblbox-${label.name}`} style={{ position: 'absolute', left: label.x + 6, top: label.y + 6, pointerEvents: 'none' }}>
-                <div style={{ background: 'rgba(0,0,0,0.6)', color: 'white', padding: '2px 6px', fontSize: 12, borderRadius: 3 }}>
-                  {label.name} ({formatFileSize(label.total)})
-                </div>
-                {label.sample ? (
-                  <div style={{ marginTop: 4, background: 'rgba(0,0,0,0.35)', color: '#eee', padding: '2px 6px', fontSize: 11, borderRadius: 3 }}>
-                    {label.sample}
-                  </div>
-                ) : null}
-              </div>
-            </React.Fragment>
-          ))}
-
-          {/* tiles */}
           {layout.tiles.map((t: any) => {
             const baseColor = getFileColor(t.name);
             const lightColor = baseColor + '80';
@@ -353,7 +318,6 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                 onClick={() => onScrollToFile(t.fullPath)}
                 title={`${t.fullPath} - ${formatFileSize(t.size)}`}
               >
-                  {/* small overlay label showing the bundle file identifier (originalPath) when available */}
                   <div
                     style={{
                       position: 'absolute',
@@ -373,7 +337,6 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   >
                     {t.name}
                   </div>
-                  {/* <div className="treemap-file-icon">{getFileIcon(t.name, false)}</div> */}
                   <div className="treemap-file-size">{formatFileSize(t.size)}</div>
               </div>
             );
