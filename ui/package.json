@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --port 3000 --open",
     "build": "vite build",
+    "analyze": "VITE_BUNDLE_DEBUG=true vite build",
     "preview": "vite preview",
     "dev:mock": "echo 'Starting development server with mock data...' && npm run dev"
   },
@@ -14,11 +15,16 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0"
   },
+    "vsBundleAnalyzer": {
+    "production": [
+    ]
+  },
   "devDependencies": {
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.2.1",
     "typescript": "^5.2.2",
+    "rollup-plugin-visualizer": "6.0.5",
     "vite": "^7.2.2"
   }
 }

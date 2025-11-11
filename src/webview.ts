@@ -60,7 +60,8 @@ export class BundleVisualizerProvider {
         retainContextWhenHidden: true,
         localResourceRoots: [
           vscode.Uri.joinPath(this.extensionUri, 'ui', 'dist'),
-          vscode.Uri.joinPath(this.extensionUri, 'ui', 'dist', 'assets')
+          vscode.Uri.joinPath(this.extensionUri, 'ui', 'dist', 'assets'),
+          vscode.Uri.joinPath(this.extensionUri, 'ui', 'dist', 'vendor')
         ]
       }
     );
