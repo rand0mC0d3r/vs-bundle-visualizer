@@ -15,6 +15,8 @@ interface TreemapPanelProps {
   hideZeroByteFiles: boolean;
   hiddenRootFolders: Set<string>;
   onScrollToFile: (filePath: string) => void;
+  sortCriteria: string;
+  sortDirection: string;
 }
 
 export const TreemapPanel: React.FC<TreemapPanelProps> = ({
@@ -23,11 +25,13 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   selectedNode,
   hideZeroByteFiles,
   hiddenRootFolders,
-  onScrollToFile
+  onScrollToFile,
+  sortCriteria,
+  sortDirection,
 }) => {
   if (!bundleData) return null as any;
 
-  const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders, 'filename', 'asc', libraryFilters);
+  const { filesToRender } = useFilteredNodes(bundleData, hiddenRootFolders,  sortCriteria, sortDirection, libraryFilters);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 1200, height: 600 });

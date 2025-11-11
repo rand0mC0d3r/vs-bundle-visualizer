@@ -247,6 +247,8 @@ function App() {
               <TreemapPanel
                 libraryFilters={libraryFilters}
                 bundleData={bundleData}
+                sortCriteria={sortCriteria}
+                sortDirection={sortDirection}
                 selectedNode={selectedNode}
                 hideZeroByteFiles={hideZeroByteFiles}
                 hiddenRootFolders={hiddenRootFolders}

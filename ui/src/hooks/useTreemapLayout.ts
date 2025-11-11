@@ -42,7 +42,7 @@ export function useTreemapLayout(folderStructure: FolderNode, containerSize: { w
       folderStructure.children.forEach((c: any) => rootObj.children.push(folderToNode(c)));
 
       const root = d3Hierarchy(rootObj).sum((d: any) => d.value || 0);
-      const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(3).tile(treemapSquarify);
+      const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(2).tile(treemapSquarify);
       treemapLayout(root as any);
 
       const tiles: any[] = [];
