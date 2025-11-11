@@ -475,21 +475,20 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
   }, [selectedDepth]);
 
   return (
-    <ResizablePanel title="Folder Structure">
-      <div className="folder-panel-controls" style={{ padding: '8px 12px' }}>
-        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 12, color: '#666' }}>Nesting level</span>
+    <ResizablePanel title="Folder Structure" titleChildren={<div className="folder-panel-controls">
+        <label style={{ display: 'flex',  alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, lineHeight: 1, color: '#666' }}>Nesting level:</span>
           <input
             type="range"
             min={0}
             max={computedMaxDepth}
             value={selectedDepth}
             onChange={(e) => setSelectedDepth(Number(e.target.value))}
-            style={{ flex: 1 }}
+            style={{  margin: 0, width: '100px', fontSize: 10}}
           />
-          <span style={{ minWidth: 32, textAlign: 'right', fontSize: 12 }}>{selectedDepth}</span>
+          <span style={{ minWidth: 32, lineHeight: 1, textAlign: 'right', fontSize: 12 }}>{selectedDepth}</span>
         </label>
-      </div>
+      </div>}>
 
       {renderFolderTree(folderStructure)}
     </ResizablePanel>

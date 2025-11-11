@@ -18,8 +18,8 @@ export const ResizablePanel: React.FC<ResizablePanelProps> = ({
 
   return (
     <div className={`side-panel`} style={{ flex: '1 1 auto' }}>
-      <div className="side-panel-header">
-        <h3>{title}</h3>
+      <div className="side-panel-header" style={{ minHeight: '24px'}}>
+        <h3 style={{ lineHeight: 0 }}>{title}</h3>
         {titleChildren}
       </div>
       <div className="side-panel-content">

@@ -623,7 +623,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 12px;
+  padding: 0px 12px;
   border-bottom: 1px solid var(--vscode-panel-border);
   background-color: var(--vscode-sideBarSectionHeader-background, var(--vscode-panel-background));
 }
