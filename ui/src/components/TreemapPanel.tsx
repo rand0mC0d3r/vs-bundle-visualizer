@@ -2,8 +2,10 @@ import { hierarchy as d3Hierarchy, treemap as d3Treemap, treemapSquarify } from 
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useFilteredNodes } from '../hooks/useFilteredNodes';
 import { BundleData } from '../types';
-import { formatFileSize, getFileColor } from '../utils/fileUtils';
 import { ResizablePanel } from './General/ResizablePanel';
+import { TreemapLayers } from './Treemap/TreemapLayers';
+import { TreemapTiles } from './Treemap/TreemapTiles';
+import { TreemapWrappers } from './Treemap/TreemapWrappers';
 import { FolderNode } from './types';
 
 interface TreemapPanelProps {
@@ -238,122 +240,11 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   }, [layout.maxDepth]);
 
   return (
-    <ResizablePanel title="File Size Visualization" titleChildren={<div style={{ display: 'flex', gap: 8, alignItems: 'center'}}>
-          <div style={{ fontSize: 12, color: '#666' }}>Level wrappers:</div>
-          {Array.from({ length: (layout as any).maxDepth + 1 }).map((_, i) => {
-            const cfg = wrapperConfig[i] || { enabled: false, label: String(i) };
-            return (
-              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                <label style={{ fontSize: 12, lineHeight: 0, display: 'flex', alignItems: 'center' }}>
-                  <input
-                    style={{ margin: 0}}
-                    type="checkbox"
-                    checked={cfg.enabled}
-                    onChange={(e) => setWrapperConfig(prev => ({ ...prev, [i]: { ...cfg, enabled: e.target.checked } }))}
-                  />
-                  <span style={{ marginLeft: 6 }}>{i}</span>
-                </label>
-              </div>
-            );
-          })}
-        </div>}>
+    <ResizablePanel title="File Size Visualization" titleChildren={<TreemapLayers {...{ layout, wrapperConfig, setWrapperConfig }} />}>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
         <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
-          {/* render level wrappers behind tiles */}
-          {((layout as any).nodes || []).map((n: any, idx: number) => {
-            const cfg = wrapperConfig[n.depth];
-            if (!cfg || !cfg.enabled) return null;
-            return (
-              <div
-                className="treemap-panel-wrapper"
-                key={`wrapper-${idx}-${n.depth}`}
-                style={{
-                  position: 'absolute',
-                  left: n.x,
-                  top: n.y,
-                  width: Math.max(1, n.w),
-                  height: Math.max(1, n.h),
-                  borderWidth: Math.max(1, n.depth - 1),
-                  boxSizing: 'border-box',
-                  pointerEvents: 'none',
-                  background: 'transparent'
-                }}
-              >
-                {(n.w > 40 && n.h > 40) && <div style={{
-                  position: 'absolute',
-                  left: 0,
-                  top: 0,
-                  zIndex: 1,
-                  pointerEvents: 'none',
-                  background: 'rgba(0,0,0,0.55)',
-                  color: '#fff',
-                  padding: '2px 6px',
-                  borderRadius: 3,
-                  fontSize: 11,
-                  maxWidth: Math.max(8, (n.w || 0) - 8),
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                  textOverflow: 'ellipsis'
-                }}>
-                  {n.name.split("-")[0]}
-                </div>}
-              </div>
-            );
-          })}
-
-          {layout.tiles.map((t: any) => {
-            const baseColor = getFileColor(t.name);
-            const lightColor = baseColor + '80';
-
-            return <>
-              <div
-                key={t.key}
-                className={`treemap-file ${selectedNode === t.fullPath ? 'selected' : ''} ${hoveredFolder === t.groupKey ? 'hovered-folder' : ''}`}
-                style={{
-                  position: 'absolute',
-                  left: t.x,
-                  top: t.y,
-                  width: t.w,
-                  height: t.h,
-                  backgroundColor: lightColor,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: '2px',
-                  overflow: 'hidden',
-                  cursor: 'pointer'
-                }}
-                onMouseEnter={() => setHoveredFolder(t.groupKey)}
-                onMouseLeave={() => setHoveredFolder(null)}
-                onClick={() => onScrollToFile(t.fullPath)}
-                title={`${t.fullPath} - ${formatFileSize(t.size)}`}
-              >
-
-                  {(t.w > 40 && t.h > 40) && <div
-                    style={{
-                      position: 'absolute',
-                      left: 4,
-                      bottom: 4,
-                      pointerEvents: 'none',
-                      background: 'rgba(0,0,0,0.55)',
-                      color: '#fff',
-                      padding: '1px 6px',
-                      opacity: 0.45,
-                      fontSize: 10,
-                      borderRadius: 3,
-                      maxWidth: Math.max(8, (t.w || 0) - 8),
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis'
-                    }}
-                  >
-                    {t.name.split('.')[0]}
-                  </div>}
-                  <div className="treemap-file-size">{formatFileSize(t.size)}</div>
-              </div>
-            </>;
-          })}
+          <TreemapWrappers {...{ layout, wrapperConfig }} />
+          <TreemapTiles {...{ hoveredFolder, setHoveredFolder, layout, selectedNode, onScrollToFile }} />
         </div>
       </div>
     </ResizablePanel>
