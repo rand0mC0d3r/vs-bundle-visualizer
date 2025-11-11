@@ -5,7 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.8...HEAD)
+## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.9...HEAD)
+
+## [v0.0.9](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.8...v0.0.9) - 2025-11-11
+
+### Commits
+
+- chore: remove potpack dependency and update vite version to 7.2.2 [`1340f19`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/1340f19eb59dc321893e7b6c8ba38c581674dde6)
+- feat: add d3-hierarchy for enhanced treemap layout and implement layout configuration in TreemapPanel [`ae19e35`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/ae19e35163eb7718d8149ca479d35d7b72e3beb9)
+- feat: streamline layout computation in TreemapPanel by removing potpack and enhancing d3-hierarchy integration [`920e297`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/920e297581d2ffe7e349878e5200f0d98f11b9db)
+- feat: enhance TreemapPanel layout and file rendering logic with improved container sizing and hover effects [`7b41336`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/7b4133663ad3d56da59cfde8d71790032dde1c12)
+- refactor: streamline bundle data handling and improve folder structure calculation in TreemapPanel [`3581821`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/3581821f27e435947f29a073b24412c0765dc506)
+- feat: add showChildren option to filter options and update analyzeBundle to conditionally include child items [`ba4c1f0`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/ba4c1f06f776addb03e11ac2f6aee4dbb5353d78)
+- feat: implement MiniToolbar component for improved toolbar management and update Header to utilize it [`a916c63`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/a916c631920a4821a434153105b22f80f8e1a5ff)
+- feat: add originalPath to file structure in TreemapPanel and types for enhanced file identification [`b986ea8`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/b986ea8b6e13ffd5b071704d808a1abc27798a66)
+- feat: simplify bundle name extraction and enhance label display in TreemapPanel [`c3cf2e3`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/c3cf2e3ba3c171a5a92710de866b893039eafa41)
+- feat: integrate potpack for dynamic file layout in TreemapPanel [`e308fa4`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/e308fa468ec7fb72cf1d48d95144ffa1b00edc2e)
+- feat: enhance bundle name extraction and filtering in TreemapPanel for improved file organization [`d201f89`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/d201f89de797780e4e122d33b719b4c4c58c1f9f)
+- feat: refactor TreemapPanel to improve file filtering and structure building logic [`f61f4c5`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/f61f4c52232df905e20163ffb7d43590dd440431)
+- feat: enhance MCP server and analyzeBundle tool with detailed usage instructions and capabilities [`d4497df`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/d4497dfcb6cace1d2c6f7c87d38a348227aaed67)
+- feat: implement ResizablePanel component and refactor folder and tree views for improved layout [`181a3e1`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/181a3e1a8a70d55db15c69002e98b74641d8658f)
+- feat: add file opening functionality and enhance header with main panel toggle [`25271f4`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/25271f4c82c197df271b53883a80529969959816)
+- feat: remove label rendering from TreemapPanel for cleaner visualization [`2e92297`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/2e92297bb56fae719be20f8ff707873f2579eb53)
+- feat: refine dependency display and enhance TreeView structure for better clarity [`16106b1`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/16106b1cc14375e010c33495ee1694e0fd5bf5fe)
+- feat: add potpack dependency and integrate it for dynamic file box sizing in TreemapPanel [`ffba999`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/ffba99970f0c6d29349e60528b82651b1ebfd744)
+- feat: enhance analysis instructions, improve panel visibility, and update keyboard shortcuts [`b8b58ba`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/b8b58baa66d4dabd9f8418a4ef4e7907df8e027d)
+- fix: correct label toggling logic in Header and adjust treemap padding for better layout [`3993836`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/39938363fb164eb257a637e578f75eab08ada011)
+- feat: add dotted border for bundle files and display original path in TreemapPanel [`f810b0a`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/f810b0aca8ac3bb0c7a1609b4345521f3aad809c)
+- feat: update panel visibility logic and rename ResizablePanel title for clarity [`99bdc01`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/99bdc01106392ec9a138f644f298531664bdf535)
+- feat: update MCP server messages to include "Bundle Analyzer" for clarity [`399b94c`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/399b94cd7901238751177f81a11326b54cb86715)
+- chore: release new version [`ee39e92`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/ee39e927539639800f2f758435b366a4c383b268)
+- feat: adjust treemap folder header styling for improved layout and readability [`f10e154`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/f10e154d0cc3b547c33c3f5b3dd8367e961bd7da)
+- refactor: remove fullWidth prop from ResizablePanel and adjust usage in TreeView for cleaner implementation [`0d7ec7a`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/0d7ec7adad6eb9773b44752668238e1306d7ea5a)
+- feat: conditionally render file name in TreemapPanel based on dimensions for improved layout [`4a58e8e`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/4a58e8e1696d16e1beac34f32c3174fa6b5e5eb2)
+- feat: reduce opacity of file size text in TreemapPanel for improved visibility [`8c838b9`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/8c838b9a6ea8b7fee802b8deb67f97d98b004c22)
+- feat: adjust toolbar button layout and modify tree size width for improved spacing [`00bcc6b`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/00bcc6b86e8449dfbd221daceaac23cf592cd7af)
+- feat: increase max-width of side panel for improved layout flexibility [`999417a`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/999417a3858a79da3b7ee6a5af9b0cec02034722)
+- feat: add minimum width to layout configuration in TreemapPanel for improved responsiveness [`f28140e`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/f28140e3fae5c5fc6a9bd619dcf7e72db9b8c148)
 
 ## [v0.0.8](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.7...v0.0.8) - 2025-11-10
 
