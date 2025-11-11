@@ -112,6 +112,7 @@ export const TreeView: React.FC<TreeViewProps> = ({
   }, {});
 
   return <ResizablePanel title="Asset Structure">
+    <div style={{ padding: '10px'}}>
     {filesToRender.length > 0 && <div className="tree-container">
       {libraryFilters.length > 0 && (
         <div className="library-filters-header">
@@ -151,5 +152,6 @@ export const TreeView: React.FC<TreeViewProps> = ({
           No files to display with the current filters.
         </div>
       )}
+      </div>
   </ResizablePanel>
 };
