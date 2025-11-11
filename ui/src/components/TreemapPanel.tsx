@@ -138,7 +138,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       folderStructure.children.forEach((c: any) => rootObj.children.push(folderToNode(c)));
 
       const root = d3Hierarchy(rootObj).sum((d: any) => d.value || 0);
-      const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(1).tile(treemapSquarify);
+      const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(2).tile(treemapSquarify);
       treemapLayout(root as any);
 
       const tiles: any[] = [];
@@ -216,7 +216,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
             const baseColor = getFileColor(t.name);
             const lightColor = baseColor + '80';
 
-            return (
+            return <>
               <div
                 key={t.key}
                 className={`treemap-file ${selectedNode === t.fullPath ? 'selected' : ''} ${hoveredFolder === t.groupKey ? 'hovered-folder' : ''}`}
@@ -240,6 +240,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                 onClick={() => onScrollToFile(t.fullPath)}
                 title={`${t.fullPath} - ${formatFileSize(t.size)}`}
               >
+
                   {(t.w > 40 && t.h > 40) && <div
                     style={{
                       position: 'absolute',
@@ -261,7 +262,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   </div>}
                   <div className="treemap-file-size">{formatFileSize(t.size)}</div>
               </div>
-            );
+            </>;
           })}
         </div>
       </div>
