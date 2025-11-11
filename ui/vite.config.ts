@@ -11,21 +11,13 @@ export default defineConfig(({ command }) => ({
   },
   build: {
     outDir: 'dist',
-      rosssllupOptions: {
-        treeshake: true,
-        output: {
-          manualChunks: composeManualChunks(process.env.VITE_BUNDLE_DEBUG === 'true'),
-          chunkFileNames: (chunkInfo) => composeChunkFileNames(chunkInfo),
-        },
-      },
     rollupOptions: {
       treeshake: true,
       output: {
-        entryFileNames: 'assets/[name].js',
-        chunkFileNames: 'assets/[name].js',
-        assetFileNames: 'assets/[name].[ext]'
-      }
-    }
+        manualChunks: composeManualChunks(process.env.VITE_BUNDLE_DEBUG === 'true'),
+        chunkFileNames: (chunkInfo) => composeChunkFileNames(chunkInfo),
+      },
+    },
   },
   base: './',
   publicDir: 'public'

@@ -41,7 +41,7 @@ export class BundleVisualizerProvider {
     vscode.commands.executeCommand('bundleVisualizer.askCopilot', uri);
   }
 
-  public show() {
+  public async show() {
     const column = vscode.window.activeTextEditor
       ? vscode.window.activeTextEditor.viewColumn
       : undefined;
@@ -53,7 +53,7 @@ export class BundleVisualizerProvider {
 
     this.panel = vscode.window.createWebviewPanel(
       'bundleVisualizer',
-      'Bundle Visualizer',
+      '🔍 Bundle Visualizer',
       column || vscode.ViewColumn.One,
       {
         enableScripts: true,
@@ -66,7 +66,7 @@ export class BundleVisualizerProvider {
       }
     );
 
-    this.panel.webview.html = this.getHtmlForWebview();
+  this.panel.webview.html = await this.getHtmlForWebview();
 
     this.panel.onDidDispose(() => {
       this.panel = undefined;
@@ -167,17 +167,59 @@ export class BundleVisualizerProvider {
     });
   }
 
-  private getHtmlForWebview(): string {
+  private async getHtmlForWebview(): Promise<string> {
     const webview = this.panel!.webview;
 
-    // Get paths to the built React app
-    const scriptPathOnDisk = vscode.Uri.joinPath(this.extensionUri, 'ui', 'dist', 'assets', 'index.js');
-    const stylePathOnDisk = vscode.Uri.joinPath(this.extensionUri, 'ui', 'dist', 'assets', 'index.css');
-
-    const scriptUri = webview.asWebviewUri(scriptPathOnDisk);
-    const styleUri = webview.asWebviewUri(stylePathOnDisk);
-
     const nonce = getNonce();
+
+    // Helper: recursively read files under ui/dist and return relative paths
+    async function readDirRecursive(root: vscode.Uri, relPath = ''): Promise<string[]> {
+      const dirUri = relPath ? vscode.Uri.joinPath(root, ...relPath.split('/')) : root;
+      let entries: [string, vscode.FileType][];
+      try {
+        entries = await vscode.workspace.fs.readDirectory(dirUri);
+      } catch (e) {
+        return [];
+      }
+
+      const results: string[] = [];
+      for (const [name, type] of entries) {
+        const childRel = relPath ? `${relPath}/${name}` : name;
+        if (type === vscode.FileType.Directory) {
+          const nested = await readDirRecursive(root, childRel);
+          results.push(...nested);
+        } else if (type === vscode.FileType.File) {
+          results.push(childRel);
+        }
+      }
+      return results;
+    }
+
+    // Collect .css and .js files from ui/dist
+    const distRoot = vscode.Uri.joinPath(this.extensionUri, 'ui', 'dist');
+    let relativeFiles: string[] = [];
+    try {
+      relativeFiles = await readDirRecursive(distRoot);
+    } catch (e) {
+      relativeFiles = [];
+    }
+
+    const cssFiles = relativeFiles.filter(p => p.endsWith('.css'));
+    const jsFiles = relativeFiles.filter(p => p.endsWith('.js'));
+
+    // Convert to webview URIs
+    const cssLinks = cssFiles.map(p => {
+      const fileUri = vscode.Uri.joinPath(distRoot, ...p.split('/'));
+      return webview.asWebviewUri(fileUri).toString();
+    });
+    const jsLinks = jsFiles.map(p => {
+      const fileUri = vscode.Uri.joinPath(distRoot, ...p.split('/'));
+      return webview.asWebviewUri(fileUri).toString();
+    });
+
+    // Build HTML: include all CSS <link>s, then the root div, then all JS <script>s with nonce
+    const cssTags = cssLinks.map(href => `<link href="${href}" rel="stylesheet">`).join('\n        ');
+    const scriptTags = jsLinks.map(src => `<script nonce="${nonce}" src="${src}"></script>`).join('\n        ');
 
     return `<!DOCTYPE html>
     <html lang="en">
@@ -185,12 +227,12 @@ export class BundleVisualizerProvider {
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${webview.cspSource} 'unsafe-inline'; script-src 'nonce-${nonce}';">
-        <link href="${styleUri}" rel="stylesheet">
-        <title>Bundle Visualizer</title>
+        ${cssTags}
+        <title>🔍 Bundle Visualizer</title>
     </head>
     <body>
         <div id="root"></div>
-        <script nonce="${nonce}" src="${scriptUri}"></script>
+        ${scriptTags}
     </body>
     </html>`;
   }

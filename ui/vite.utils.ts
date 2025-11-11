@@ -14,7 +14,7 @@ export function matchVendorFast(id: string, debug = false) {
       if (regex.test(id)) { return 'vendor__' + regexSignature; }
     }
 
-    return 'vendor__misc';
+    return productionMatchers.length === 0 ? undefined : 'vendor__misc';
   } else {
     return 'vendor__' + id.split('node_modules/')[1]?.split('/')[0];
   }
