@@ -5,7 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.9...HEAD)
+## [Unreleased](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.10...HEAD)
+
+## [v0.0.10](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.9...v0.0.10) - 2025-11-11
+
+### Commits
+
+- feat: add bundle visualizer integration and analysis script [`53c513d`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/53c513dda7e5331d0ee30fb35d21f991397da99f)
+- feat: refactor TreemapPanel to utilize TreemapLayers, TreemapTiles, and TreemapWrappers components for improved structure and maintainability [`8bd49fa`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/8bd49fac2d49916b971ac892db7a77d1226a9983)
+- feat: implement useTreemapLayout hook for optimized treemap layout calculations in TreemapPanel [`14363d8`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/14363d8853010ecdaf3b7bc07884fb011b739b5f)
+- feat: implement useTreemapData hook for improved treemap data handling in TreemapPanel [`d622946`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/d622946c44f95f39ce23fca445170ca2f56ca8ab)
+- feat: add level wrapper controls to TreemapPanel for enhanced visualization [`aee203f`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/aee203f537e014565945d93725da9cd0dc30aab7)
+- feat: enhance Bundle Visualizer with async HTML generation and improved file handling [`d150077`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/d15007722dde50c3bf1cfbcfd0ae038be76de567)
+- feat: add onSetExpandedFolders prop to FolderPanel for bulk folder expansion control [`2ef9cf2`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/2ef9cf24d3d70cf36f5c776dd291aee4a24903b5)
+- chore: release new version [`96078f4`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/96078f477607733127e3516609c60de517ab2992)
+- feat: update treemap panel styles and layout for improved visualization [`c72782f`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/c72782f0b9467adea9e7783a2885816a11f2ea57)
+- feat: enhance ResizablePanel with titleChildren prop and update TreemapPanel to utilize it for level wrapper controls [`7233715`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/723371527203770489e501dd3bbf49d01869e3cc)
+- feat: update ResizablePanel to support titleChildren prop and adjust styling in FolderPanel [`502eb07`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/502eb07a4bc4b0b1acc3676a9adfd6346d06d446)
+- Refactor code structure for improved readability and maintainability [`a736da8`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/a736da8dcb28ecf0d78fbfc57c2dcc6ba44347f0)
+- feat: pass sortCriteria and sortDirection props to TreemapPanel and update useFilteredNodes call [`789767d`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/789767ddda3d4384ce71d17d5db847e58f1b803b)
+- feat: update treemap panel border style and remove unused input field [`a0ce3f6`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/a0ce3f6131df61992557b781f52e0d7a6f12547e)
+- feat: increase minimum dimensions for treemap nodes and comment out input field [`a098300`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/a0983009b353fdf2fc302e3e4565b2768d50f0ce)
+- feat: adjust treemap layout padding and improve rendering structure [`65420bb`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/65420bb647ba1c7e715bdaec789e590bb30e61dc)
+- feat: add styling for tree root title and adjust padding in TreeView component [`74899e1`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/74899e18ca42cc7d3b4c8af702714f68da7df761)
+- feat: adjust minimum dimensions for treemap node width and height [`f89abdd`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/f89abddfc38e371f26983c00ff81a1fe4855fd74)
+- fix: set initial selected depth to 1 instead of computed max depth in FolderPanel [`e855567`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/e8555671a4aa6d7d8bd20b71d985f407edef0c9e)
+- style: remove gap from main layout for improved spacing [`bf4935c`](https://github.com/rand0mC0d3r/vs-bundle-visualizer/commit/bf4935c21c6648d7de349b2bae64f1f75c785f5d)
 
 ## [v0.0.9](https://github.com/rand0mC0d3r/vs-bundle-visualizer/compare/v0.0.8...v0.0.9) - 2025-11-11
 
