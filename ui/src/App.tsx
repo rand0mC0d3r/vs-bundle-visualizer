@@ -236,6 +236,7 @@ function App() {
                 hiddenRootFolders={hiddenRootFolders}
                 libraryFilters={libraryFilters}
                 onToggleFolder={toggleFolder}
+                onSetExpandedFolders={(folders: Set<string>) => setExpandedFolders(folders)}
                 onSelectFolder={selectFolder}
                 onScrollToFile={scrollToFileInMainContent}
                 onAddLibraryFilter={addLibraryFilter}

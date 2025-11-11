@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { BundleData } from '../types';
 import { buildDependencyMap, checkFileMatchesLibraryFilters, checkFolderMatchesLibraryFilters, DependencyMap as SharedDependencyMap } from '../utils/dependencyUtils';
 import { formatFileSize, getFileExtension, getFileIcon } from '../utils/fileUtils';
@@ -18,6 +18,8 @@ interface FolderPanelProps {
   onScrollToFile: (filePath: string) => void;
   onAddLibraryFilter: (library: string) => void;
   onRemoveLibraryFilter: (library: string) => void;
+  // Optional bulk setter to update expanded folders in one go (used by slider)
+  onSetExpandedFolders?: (folders: Set<string>) => void;
 }
 
 export const FolderPanel: React.FC<FolderPanelProps> = ({
@@ -32,7 +34,8 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
   onSelectFolder,
   onScrollToFile,
   onAddLibraryFilter,
-  onRemoveLibraryFilter
+  onRemoveLibraryFilter,
+  onSetExpandedFolders
 }) => {
   // Extract dependency relationships from nodeMetas (similar to TreeView)
   const dependencyMap = useMemo((): SharedDependencyMap => {
@@ -409,9 +412,85 @@ export const FolderPanel: React.FC<FolderPanelProps> = ({
   }
 
   const folderStructure = buildFolderStructure(bundleData);
+  // Compute depth map and max depth for the folder tree (root = 0)
+  const { depthMap, computedMaxDepth } = useMemo(() => {
+    const map = new Map<string, number>();
+    let max = 0;
+    const traverse = (node: FolderNode, depth: number) => {
+      map.set(node.path, depth);
+      if (depth > max) max = depth;
+      node.children.forEach(child => traverse(child, depth + 1));
+    };
+    traverse(folderStructure, 0);
+    return { depthMap: map, computedMaxDepth: max };
+  }, [folderStructure]);
+
+  const [selectedDepth, setSelectedDepth] = useState<number>(0);
+  const skipInitialRef = useRef(true);
+
+  // Initialize slider to max depth when the structure changes, but don't trigger toggles on mount
+  useEffect(() => {
+    setSelectedDepth(computedMaxDepth);
+  }, [computedMaxDepth]);
+
+  // When the selected depth changes, compute which folders should be expanded and toggle as needed
+  useEffect(() => {
+    if (skipInitialRef.current) {
+      skipInitialRef.current = false;
+      return;
+    }
+
+    // Build desired set: all folder paths with depth <= selectedDepth and that have children
+    const desired = new Set<string>();
+    const collect = (node: FolderNode) => {
+      const depth = depthMap.get(node.path) ?? 0;
+      if (node.children && node.children.length > 0 && depth <= selectedDepth) {
+        // skip toggling root ('') to avoid strange UX; include if you prefer
+        if (node.path !== '') desired.add(node.path);
+      }
+      node.children.forEach(child => collect(child));
+    };
+    collect(folderStructure);
+
+    // Current expanded folders is a Set passed from parent
+    const currentlyExpanded = new Set<string>(expandedFolders);
+
+    // If parent provided a bulk setter, use it to replace the set in one update
+    if (onSetExpandedFolders) {
+      const newExpanded = new Set<string>(desired);
+      // Keep any currently expanded root (empty string) if present
+      if (currentlyExpanded.has('')) newExpanded.add('');
+      onSetExpandedFolders(newExpanded);
+    } else {
+      // Folders to expand: in desired but not currently expanded
+      const toExpand = Array.from(desired).filter(p => !currentlyExpanded.has(p));
+      // Folders to collapse: currently expanded but not desired
+      const toCollapse = Array.from(currentlyExpanded).filter(p => !desired.has(p));
+
+      // First expand (so nested toggles won't immediately collapse), then collapse extras
+      toExpand.forEach(path => onToggleFolder(path));
+      toCollapse.forEach(path => onToggleFolder(path));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDepth]);
 
   return (
     <ResizablePanel title="Folder Structure">
+      <div className="folder-panel-controls" style={{ padding: '8px 12px' }}>
+        <label style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 12, color: '#666' }}>Nesting level</span>
+          <input
+            type="range"
+            min={0}
+            max={computedMaxDepth}
+            value={selectedDepth}
+            onChange={(e) => setSelectedDepth(Number(e.target.value))}
+            style={{ flex: 1 }}
+          />
+          <span style={{ minWidth: 32, textAlign: 'right', fontSize: 12 }}>{selectedDepth}</span>
+        </label>
+      </div>
+
       {renderFolderTree(folderStructure)}
     </ResizablePanel>
   );
