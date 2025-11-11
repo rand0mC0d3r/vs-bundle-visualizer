@@ -155,8 +155,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
           key: leaf.data.fullPath,
           x: leaf.x0,
           y: leaf.y0,
-          w: Math.max(1, leaf.x1 - leaf.x0),
-          h: Math.max(1, leaf.y1 - leaf.y0),
+          w: Math.max(8, leaf.x1 - leaf.x0),
+          h: Math.max(8, leaf.y1 - leaf.y0),
           name: leaf.data.name,
           fullPath: leaf.data.fullPath,
           originalPath: leaf.data.originalPath,
@@ -255,12 +255,12 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   />
                   <span style={{ marginLeft: 6 }}>{i}</span>
                 </label>
-                <input
+                {/* <input
                   aria-label={`label-for-level-${i}`}
                   value={cfg.label}
                   onChange={(e) => setWrapperConfig(prev => ({ ...prev, [i]: { ...cfg, label: e.target.value } }))}
                   style={{ width: 64, fontSize: 12, padding: '2px 4px' }}
-                />
+                /> */}
               </div>
             );
           })}
