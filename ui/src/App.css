@@ -682,7 +682,7 @@
 }
 
 .treemap-panel-wrapper {
-  border: 1px dotted var(--vscode-editor-foreground);
+  border: 1px dashed var(--vscode-editor-foreground);
 }
 
 

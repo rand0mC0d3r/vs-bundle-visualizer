@@ -139,7 +139,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
       folderStructure.children.forEach((c: any) => rootObj.children.push(folderToNode(c)));
 
       const root = d3Hierarchy(rootObj).sum((d: any) => d.value || 0);
-      const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(2).tile(treemapSquarify);
+      const treemapLayout = d3Treemap().size([containerSize.width, containerSize.height]).padding(3).tile(treemapSquarify);
       treemapLayout(root as any);
 
       const tiles: any[] = [];
@@ -286,25 +286,24 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                   background: 'transparent'
                 }}
               >
-                <div style={{
+                {(n.w > 40 && n.h > 40) && <div style={{
                   position: 'absolute',
-                  left: 6,
-                  bottom: 6,
+                  left: 0,
+                  top: 0,
+                  zIndex: 1,
                   pointerEvents: 'none',
                   background: 'rgba(0,0,0,0.55)',
                   color: '#fff',
                   padding: '2px 6px',
                   borderRadius: 3,
                   fontSize: 11,
-                                        maxWidth: Math.max(8, (n.w || 0) - 8),
-                      overflow: 'hidden',
-                      whiteSpace: 'nowrap',
-                      textOverflow: 'ellipsis'
+                  maxWidth: Math.max(8, (n.w || 0) - 8),
+                  overflow: 'hidden',
+                  whiteSpace: 'nowrap',
+                  textOverflow: 'ellipsis'
                 }}>
-                  {/* {JSON.stringify(n.name)} */}
                   {n.name.split("-")[0]}
-                  {/* {cfg.label} */}
-                </div>
+                </div>}
               </div>
             );
           })}
@@ -342,11 +341,12 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                     style={{
                       position: 'absolute',
                       left: 4,
-                      top: 4,
+                      bottom: 4,
                       pointerEvents: 'none',
                       background: 'rgba(0,0,0,0.55)',
                       color: '#fff',
                       padding: '1px 6px',
+                      opacity: 0.45,
                       fontSize: 10,
                       borderRadius: 3,
                       maxWidth: Math.max(8, (t.w || 0) - 8),
