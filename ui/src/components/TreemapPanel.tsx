@@ -319,7 +319,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                 onClick={() => onScrollToFile(t.fullPath)}
                 title={`${t.fullPath} - ${formatFileSize(t.size)}`}
               >
-                  <div
+                  {(t.w > 40 && t.h > 40) && <div
                     style={{
                       position: 'absolute',
                       left: 4,
@@ -336,8 +336,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
                       textOverflow: 'ellipsis'
                     }}
                   >
-                    {t.name}
-                  </div>
+                    {t.name.split('.')[0]}
+                  </div>}
                   <div className="treemap-file-size">{formatFileSize(t.size)}</div>
               </div>
             );
