@@ -238,17 +238,15 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   }, [layout.maxDepth]);
 
   return (
-    <ResizablePanel title="File Size Visualization">
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
-        {/* level wrapper controls */}
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 8px' }}>
+    <ResizablePanel title="File Size Visualization" titleChildren={<div style={{ display: 'flex', gap: 8, alignItems: 'center'}}>
           <div style={{ fontSize: 12, color: '#666' }}>Level wrappers:</div>
           {Array.from({ length: (layout as any).maxDepth + 1 }).map((_, i) => {
             const cfg = wrapperConfig[i] || { enabled: false, label: String(i) };
             return (
-              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', border: '1px solid transparent', padding: '2px' }}>
-                <label style={{ fontSize: 12 }}>
+              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                <label style={{ fontSize: 12, lineHeight: 0, display: 'flex', alignItems: 'center' }}>
                   <input
+                    style={{ margin: 0}}
                     type="checkbox"
                     checked={cfg.enabled}
                     onChange={(e) => setWrapperConfig(prev => ({ ...prev, [i]: { ...cfg, enabled: e.target.checked } }))}
@@ -258,8 +256,8 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
               </div>
             );
           })}
-        </div>
-
+        </div>}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
         <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
           {/* render level wrappers behind tiles */}
           {((layout as any).nodes || []).map((n: any, idx: number) => {
