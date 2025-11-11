@@ -30,6 +30,7 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [containerSize, setContainerSize] = useState({ width: 1200, height: 600 });
   const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
+  const [wrapperConfig, setWrapperConfig] = useState<Record<number, { enabled: boolean; label: string }>>({});
 
   useEffect(() => {
     const el = containerRef.current;
@@ -201,17 +202,113 @@ export const TreemapPanel: React.FC<TreemapPanelProps> = ({
         );
       });
 
-      return { tiles, labels, width: containerSize.width, height: containerSize.height };
+      // collect nodes for wrappers (include root and internal nodes)
+      const nodes: any[] = [];
+      root.descendants().forEach((d: any) => {
+        nodes.push({
+          depth: d.depth,
+          name: d.data?.name,
+          x: d.x0,
+          y: d.y0,
+          w: Math.max(1, d.x1 - d.x0),
+          h: Math.max(1, d.y1 - d.y0),
+          data: d.data
+        });
+      });
+
+      const maxDepth = Math.max(0, ...nodes.map(n => n.depth));
+
+      return { tiles, labels, nodes, maxDepth, width: containerSize.width, height: containerSize.height };
     } catch (e) {
       console.warn('d3 layout failed', e);
-      return { tiles: [], labels: [], width: containerSize.width, height: containerSize.height };
+      return { tiles: [], labels: [], nodes: [], maxDepth: 0, width: containerSize.width, height: containerSize.height };
     }
   }, [folderStructure, containerSize.width, containerSize.height]);
+
+  // initialize wrapperConfig when maxDepth changes (preserve existing entries)
+  useEffect(() => {
+    const maxDepth = (layout as any).maxDepth || 0;
+    setWrapperConfig(prev => {
+      const next: Record<number, { enabled: boolean; label: string }> = {};
+      for (let i = 0; i <= maxDepth; i++) {
+        next[i] = prev[i] || { enabled: false, label: String(i) };
+      }
+      return next;
+    });
+  }, [layout.maxDepth]);
 
   return (
     <ResizablePanel title="File Size Visualization">
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, height: '100%' }}>
+        {/* level wrapper controls */}
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: '4px 8px' }}>
+          <div style={{ fontSize: 12, color: '#666' }}>Level wrappers:</div>
+          {Array.from({ length: (layout as any).maxDepth + 1 }).map((_, i) => {
+            const cfg = wrapperConfig[i] || { enabled: false, label: String(i) };
+            return (
+              <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'center', border: '1px solid transparent', padding: '2px' }}>
+                <label style={{ fontSize: 12 }}>
+                  <input
+                    type="checkbox"
+                    checked={cfg.enabled}
+                    onChange={(e) => setWrapperConfig(prev => ({ ...prev, [i]: { ...cfg, enabled: e.target.checked } }))}
+                  />
+                  <span style={{ marginLeft: 6 }}>{i}</span>
+                </label>
+                <input
+                  aria-label={`label-for-level-${i}`}
+                  value={cfg.label}
+                  onChange={(e) => setWrapperConfig(prev => ({ ...prev, [i]: { ...cfg, label: e.target.value } }))}
+                  style={{ width: 64, fontSize: 12, padding: '2px 4px' }}
+                />
+              </div>
+            );
+          })}
+        </div>
+
         <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative' }}>
+          {/* render level wrappers behind tiles */}
+          {((layout as any).nodes || []).map((n: any, idx: number) => {
+            const cfg = wrapperConfig[n.depth];
+            if (!cfg || !cfg.enabled) return null;
+            return (
+              <div
+                className="treemap-panel-wrapper"
+                key={`wrapper-${idx}-${n.depth}`}
+                style={{
+                  position: 'absolute',
+                  left: n.x,
+                  top: n.y,
+                  width: Math.max(1, n.w),
+                  height: Math.max(1, n.h),
+                  boxSizing: 'border-box',
+                  pointerEvents: 'none',
+                  background: 'transparent'
+                }}
+              >
+                <div style={{
+                  position: 'absolute',
+                  left: 6,
+                  bottom: 6,
+                  pointerEvents: 'none',
+                  background: 'rgba(0,0,0,0.55)',
+                  color: '#fff',
+                  padding: '2px 6px',
+                  borderRadius: 3,
+                  fontSize: 11,
+                                        maxWidth: Math.max(8, (n.w || 0) - 8),
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                      textOverflow: 'ellipsis'
+                }}>
+                  {/* {JSON.stringify(n.name)} */}
+                  {n.name.split("-")[0]}
+                  {/* {cfg.label} */}
+                </div>
+              </div>
+            );
+          })}
+
           {layout.tiles.map((t: any) => {
             const baseColor = getFileColor(t.name);
             const lightColor = baseColor + '80';

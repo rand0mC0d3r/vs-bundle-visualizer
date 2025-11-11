@@ -681,6 +681,11 @@
   flex-direction: column;
 }
 
+.treemap-panel-wrapper {
+  border: 1px dotted var(--vscode-editor-foreground);
+}
+
+
 .treemap-panel-content {
   flex: 1;
   overflow-y: auto;
